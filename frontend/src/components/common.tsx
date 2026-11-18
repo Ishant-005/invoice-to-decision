@@ -38,23 +38,25 @@ export function DecisionBadge({ decision, large }: { decision: Decision; large?:
   )
 }
 
+// Where a run stands now, and who settled it.
 const STATES: Record<RunState, { label: string; dot: string }> = {
   processing: { label: 'Processing', dot: 'bg-primary animate-pulse' },
-  approved: { label: 'Approved', dot: 'bg-approve' },
+  approved: { label: 'Approved by the process', dot: 'bg-approve' },
   awaiting_review: { label: 'Awaiting review', dot: 'bg-review' },
   approved_by_reviewer: { label: 'Approved by reviewer', dot: 'bg-approve' },
   rejected_by_reviewer: { label: 'Rejected by reviewer', dot: 'bg-reject' },
-  rejected: { label: 'Rejected', dot: 'bg-reject' },
+  rejected: { label: 'Rejected by the process', dot: 'bg-reject' },
   failed: { label: 'Failed, no decision', dot: 'bg-muted-foreground' },
 }
 
-/** Where a run stands now, including what a reviewer did after the decision. */
-export function StateLabel({ state }: { state: RunState }) {
-  const { label, dot } = STATES[state]
+/** Where a run stands now, including what a reviewer did after the decision. `label`
+ *  replaces the usual wording (used for seeded history, which no run settled). */
+export function StateLabel({ state, label }: { state: RunState; label?: string }) {
+  const look = STATES[state]
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-foreground/80">
-      <span className={cn('size-1.5 rounded-full', dot)} />
-      {label}
+      <span className={cn('size-1.5 rounded-full', look.dot)} />
+      {label ?? look.label}
     </span>
   )
 }

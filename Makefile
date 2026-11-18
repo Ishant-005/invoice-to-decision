@@ -5,7 +5,7 @@
 help:
 	@echo "make install   Install backend and frontend dependencies"
 	@echo "make dev       Run backend (port 8000) and frontend (port 5173) together"
-	@echo "make test      Run backend tests, then type-check and build the frontend"
+	@echo "make test      Run backend tests, frontend tests, then type-check and build the frontend"
 	@echo "make lint      Lint backend and frontend"
 	@echo "make build     Build the frontend for production"
 	@echo "make seed      Reset the database to the seed data (vendors, POs, seeded history)"
@@ -35,6 +35,7 @@ frontend:
 
 test:
 	cd backend && uv run pytest
+	cd frontend && npm test
 	cd frontend && npm run build
 
 lint:

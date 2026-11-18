@@ -168,18 +168,24 @@ class VendorOut(BaseModel):
 
 
 class Stats(BaseModel):
-    """Dashboard numbers. They count runs made in the app; seeded history is separate."""
+    """Dashboard numbers. They count runs made in the app; seeded history is separate.
 
+    The dashboard's filters go by where a run stands now, so the totals here are grouped the
+    same way: `approved` and `rejected` each cover both the process and a reviewer."""
+
+    total_runs: int  # every run, including failed ones and ones still in progress
     processed: int  # runs that reached a decision
-    auto_approved: int
+    approved: int  # approved by the process or by a reviewer
+    auto_approved: int  # approved by the process, with no person involved
     auto_approved_percent: float | None  # of processed; null when nothing is processed
-    awaiting_review: int
     approved_by_reviewer: int
-    rejected: int  # rejected by the pipeline
+    awaiting_review: int
+    rejected: int  # rejected by the process or by a reviewer
+    rejected_by_process: int
     rejected_by_reviewer: int
     failed: int
     in_progress: int
-    value_approved_pretax: Decimal  # approved by the pipeline or by a reviewer
+    value_approved_pretax: Decimal  # approved by the process or by a reviewer
     value_approved_gross: Decimal
     seeded_invoices: int
 

@@ -227,12 +227,15 @@ export interface RunList {
 }
 
 export interface Stats {
-  processed: number
+  total_runs: number // every run, including failed ones and ones in progress
+  processed: number // runs that reached a decision
+  approved: number // by the process or by a reviewer
   auto_approved: number
   auto_approved_percent: number | null
-  awaiting_review: number
   approved_by_reviewer: number
-  rejected: number
+  awaiting_review: number
+  rejected: number // by the process or by a reviewer
+  rejected_by_process: number
   rejected_by_reviewer: number
   failed: number
   in_progress: number

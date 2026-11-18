@@ -1,7 +1,7 @@
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,6 +10,8 @@ export default defineConfig({
     // Lets us write `@/components/...` instead of long relative paths.
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
+  // Frontend tests (`npm test`) run in a simulated browser page.
+  test: { environment: 'jsdom' },
   server: {
     port: 5173,
     // In development the frontend (5173) forwards /api calls to the backend (8000).

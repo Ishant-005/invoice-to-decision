@@ -156,10 +156,14 @@ def get_stats(session: SessionDep) -> Stats:
     seeded = len(session.exec(select(Invoice).where(Invoice.is_seeded)).all())
 
     return Stats(
-        processed=processed, auto_approved=count("approved"),
+        total_runs=len(states), processed=processed,
+        approved=count("approved") + count("approved_by_reviewer"),
+        auto_approved=count("approved"),
         auto_approved_percent=round(100 * count("approved") / processed, 1) if processed else None,
+        approved_by_reviewer=count("approved_by_reviewer"),
         awaiting_review=count("awaiting_review"),
-        approved_by_reviewer=count("approved_by_reviewer"), rejected=count("rejected"),
+        rejected=count("rejected") + count("rejected_by_reviewer"),
+        rejected_by_process=count("rejected"),
         rejected_by_reviewer=count("rejected_by_reviewer"), failed=count("failed"),
         in_progress=count("processing"), value_approved_pretax=pretax,
         value_approved_gross=gross, seeded_invoices=seeded)

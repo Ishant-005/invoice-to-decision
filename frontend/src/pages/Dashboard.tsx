@@ -16,31 +16,11 @@ import {
   Tag,
 } from '@/components/common'
 import { Button } from '@/components/ui/button'
-import type { Decision, RunList, RunSummary, Stats } from '@/lib/api'
+import type { RunList, RunSummary, Stats } from '@/lib/api'
 import { day, inr, moment } from '@/lib/format'
+import { type Filter, FILTERS, runsFor } from '@/lib/runFilters'
 import { useApi } from '@/lib/useApi'
 import { cn } from '@/lib/utils'
-
-// One filter at a time on the runs table. The buttons above the table filter by the
-// process's decision; the tiles add three views by where a run stands now.
-type Filter = 'ALL' | Decision | 'PROCESSED' | 'AWAITING' | 'APPROVED_VALUE'
-
-const FILTER_TEST: Record<Filter, (run: RunSummary) => boolean> = {
-  ALL: () => true,
-  APPROVE: (run) => run.decision === 'APPROVE',
-  REVIEW: (run) => run.decision === 'REVIEW',
-  REJECT: (run) => run.decision === 'REJECT',
-  PROCESSED: (run) => run.decision !== null, // reached a decision
-  AWAITING: (run) => run.state === 'awaiting_review',
-  APPROVED_VALUE: (run) => run.state === 'approved' || run.state === 'approved_by_reviewer',
-}
-
-// What the table says it is showing when a tile's view is on.
-const TILE_VIEW_LABEL: Partial<Record<Filter, string>> = {
-  PROCESSED: 'Runs that reached a decision',
-  AWAITING: 'Awaiting review',
-  APPROVED_VALUE: 'Approved, by the process or a reviewer',
-}
 
 export function Dashboard() {
   // While any run is still being processed, both calls repeat so the screen stays current.
@@ -58,7 +38,7 @@ export function Dashboard() {
       {stats.error ? (
         <ErrorBox message={stats.error} onRetry={stats.reload} />
       ) : (
-        <StatTiles stats={stats.data} filter={filter} onFilter={setFilter} />
+        <StatTiles stats={stats.data} onFilter={setFilter} />
       )}
 
       <div className="mt-6">
@@ -81,33 +61,23 @@ export function Dashboard() {
 
 // --- Tiles -----------------------------------------------------------------------------
 
-function StatTiles({
-  stats,
-  filter,
-  onFilter,
-}: {
-  stats: Stats | null
-  filter: Filter
-  onFilter: (filter: Filter) => void
-}) {
-  // Each tile filters the runs table to the runs it counts; clicking it again shows all.
-  const tile = (key: Filter) => ({
-    active: filter === key,
-    onClick: () => onFilter(filter === key ? 'ALL' : key),
-  })
+/** Each tile switches the runs table to the filter that lists the runs it counts, so a
+ *  tile's number and the number on that filter are always the same. */
+function StatTiles({ stats, onFilter }: { stats: Stats | null; onFilter: (filter: Filter) => void }) {
   const s = stats
-  const reviewed = s ? s.approved_by_reviewer + s.rejected_by_reviewer : 0
   return (
     <div className="grid grid-cols-5 gap-3">
       <Tile
-        {...tile('PROCESSED')}
         label="Invoices processed"
-        value={s ? String(s.processed) : null}
+        shows="All"
+        onClick={() => onFilter('ALL')}
+        value={s ? String(s.total_runs) : null}
         note={
           s
             ? [
+                (s.failed > 0 || s.in_progress > 0) && `${s.processed} decided`,
+                s.failed > 0 && `${s.failed} failed`,
                 s.in_progress > 0 && `${s.in_progress} in progress`,
-                s.failed > 0 && `${s.failed} failed, no decision`,
                 `plus ${s.seeded_invoices} in seeded history`,
               ]
                 .filter(Boolean)
@@ -116,37 +86,45 @@ function StatTiles({
         }
       />
       <Tile
-        {...tile('APPROVE')}
         label="Auto-approved"
+        shows="Approved"
+        onClick={() => onFilter('APPROVED')}
         value={s ? (s.auto_approved_percent === null ? '—' : `${s.auto_approved_percent}%`) : null}
-        note={s ? (s.processed ? `${s.auto_approved} of ${s.processed} needed no person` : 'Nothing processed yet') : ''}
+        note={
+          s
+            ? s.processed
+              ? `${s.auto_approved} of ${s.processed} decided needed no person`
+              : 'Nothing processed yet'
+            : ''
+        }
         tone="approve"
       />
       <Tile
-        {...tile('AWAITING')}
         label="Awaiting review"
+        shows="Awaiting review"
+        onClick={() => onFilter('AWAITING')}
         value={s ? String(s.awaiting_review) : null}
-        note={s ? (reviewed ? `${reviewed} already resolved by a reviewer` : 'Waiting for a person to decide') : ''}
+        note={s ? (s.awaiting_review ? 'Waiting for a person to decide' : 'Nothing is waiting') : ''}
         tone="review"
       />
       <Tile
-        {...tile('REJECT')}
         label="Rejected"
+        shows="Rejected"
+        onClick={() => onFilter('REJECTED')}
         value={s ? String(s.rejected) : null}
-        note={
-          s
-            ? s.rejected_by_reviewer
-              ? `plus ${s.rejected_by_reviewer} rejected by a reviewer`
-              : 'Rejected by the process itself'
-            : ''
-        }
+        note={s ? `${s.rejected_by_process} by the process · ${s.rejected_by_reviewer} by a reviewer` : ''}
         tone="reject"
       />
       <Tile
-        {...tile('APPROVED_VALUE')}
         label="Value approved"
+        shows="Approved"
+        onClick={() => onFilter('APPROVED')}
         value={s ? inr(s.value_approved_pretax) : null}
-        note={s ? `before tax · ${inr(s.value_approved_gross)} including tax` : ''}
+        note={
+          s
+            ? `before tax, ${s.approved} invoice${s.approved === 1 ? '' : 's'} · ${inr(s.value_approved_gross)} incl. tax`
+            : ''
+        }
       />
     </div>
   )
@@ -154,17 +132,17 @@ function StatTiles({
 
 function Tile({
   label,
+  shows,
   value,
   note,
   tone,
-  active,
   onClick,
 }: {
   label: string
+  shows: string // the name of the filter this tile switches to
   value: string | null
   note: string
   tone?: 'approve' | 'review' | 'reject'
-  active: boolean
   onClick: () => void
 }) {
   const bar = { approve: 'bg-approve', review: 'bg-review', reject: 'bg-reject' }
@@ -172,20 +150,13 @@ function Tile({
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={active}
-      title={active ? 'Showing these runs below. Click to show all runs.' : 'Show these runs in the table below'}
-      className={cn(
-        'relative overflow-hidden rounded-lg border bg-card px-4 py-3.5 text-left outline-none transition-colors',
-        'hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring',
-        active && 'border-primary bg-accent/50',
-      )}
+      title={`Show "${shows}" in the runs table`}
+      data-tile={label}
+      className="relative overflow-hidden rounded-lg border bg-card px-4 py-3.5 text-left outline-none transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span className={cn('absolute inset-y-0 left-0 w-[3px]', tone ? bar[tone] : 'bg-border')} />
-      <span className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-        {label}
-        {active && <span className="font-semibold text-primary">Shown below</span>}
-      </span>
-      <span className="num mt-1.5 block text-2xl font-semibold tracking-tight">
+      <span className="block text-xs font-medium text-muted-foreground">{label}</span>
+      <span data-value className="num mt-1.5 block text-2xl font-semibold tracking-tight">
         {value ?? <span className="text-muted-foreground">…</span>}
       </span>
       <span className="mt-1 block min-h-4 text-xs text-muted-foreground">{note}</span>
@@ -194,13 +165,6 @@ function Tile({
 }
 
 // --- Runs table ------------------------------------------------------------------------
-
-const DECISION_FILTERS: { key: Filter; label: string }[] = [
-  { key: 'ALL', label: 'All' },
-  { key: 'APPROVE', label: 'Approve' },
-  { key: 'REVIEW', label: 'Review' },
-  { key: 'REJECT', label: 'Reject' },
-]
 
 function RunsTable({
   runs,
@@ -212,45 +176,36 @@ function RunsTable({
   onFilter: (filter: Filter) => void
 }) {
   const navigate = useNavigate()
-  const shown = runs.filter(FILTER_TEST[filter])
-  const count = (key: Filter) => runs.filter(FILTER_TEST[key]).length
-  const tileView = TILE_VIEW_LABEL[filter]
+  const shown = runsFor(filter, runs)
+  const empty = FILTERS.find((item) => item.key === filter)?.empty
 
   return (
     <Panel>
       <div className="flex items-center justify-between border-b px-4 py-2.5">
-        <h2 className="flex items-center gap-3 font-semibold">
-          Runs
-          {tileView && (
-            <span className="flex items-center gap-2 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-              {tileView} <span className="num opacity-70">{count(filter)}</span>
-              <button type="button" onClick={() => onFilter('ALL')} className="underline underline-offset-2 hover:no-underline">
-                Show all
-              </button>
-            </span>
-          )}
-        </h2>
-        <div className="flex items-center gap-1" role="group" aria-label="Filter by decision">
-          {DECISION_FILTERS.map(({ key, label }) => (
+        <h2 className="font-semibold">Runs</h2>
+        {/* One filter, by where a run stands now. The active button is the only indicator. */}
+        <div className="flex items-center gap-1" role="group" aria-label="Filter runs by state">
+          {FILTERS.map(({ key, label }) => (
             <button
               key={key}
               type="button"
               onClick={() => onFilter(key)}
               aria-pressed={filter === key}
+              data-filter={key}
               className={cn(
-                'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                'rounded-md px-2.5 py-1 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
                 filter === key
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
-              {label} <span className="num ml-0.5 opacity-70">{count(key)}</span>
+              {label} <span data-count className="num ml-0.5 opacity-80">{runsFor(key, runs).length}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {runs.length === 0 ? (
+      {runs.length === 0 && filter === 'ALL' ? (
         <EmptyState
           title="No invoices have been run yet"
           action={
@@ -265,28 +220,19 @@ function RunsTable({
           decision and the reason for it.
         </EmptyState>
       ) : shown.length === 0 ? (
-        <EmptyState
-          title="No runs match this filter"
-          action={
-            <Button variant="outline" onClick={() => onFilter('ALL')}>
-              Show all runs
-            </Button>
-          }
-        >
-          {tileView ?? `No run has the decision ${filter.toLowerCase()}.`}
-        </EmptyState>
+        <EmptyState title={empty ?? 'No runs to show.'} />
       ) : (
         <table className="w-full table-fixed text-left">
           <thead>
             <tr className="border-b text-xs text-muted-foreground [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
               <th className="w-[100px] pl-4!">Time</th>
-              <th className="w-[220px]">Vendor</th>
+              <th className="w-[208px]">Vendor</th>
               <th className="w-[124px]">Invoice no.</th>
               <th className="w-[136px] text-right">Amount incl. tax</th>
               <th className="w-[76px]">PO</th>
               <th className="w-[94px]">Decision</th>
               <th>Headline reason</th>
-              <th className="w-[150px]">State</th>
+              <th className="w-[178px]">State</th>
             </tr>
           </thead>
           <tbody>
@@ -381,7 +327,7 @@ function SeededHistory({ list }: { list: RunList }) {
           {list.seeded_history.map((invoice) => (
             <tr key={invoice.file_name} className="border-b last:border-b-0 [&>td]:px-3 [&>td]:py-2">
               <td className="num w-[100px] pl-4! text-xs whitespace-nowrap text-muted-foreground">{day(invoice.invoice_date)}</td>
-              <td className="w-[220px] truncate font-medium">{invoice.vendor_name}</td>
+              <td className="w-[208px] truncate font-medium">{invoice.vendor_name}</td>
               <td className="num w-[124px]">{invoice.invoice_number}</td>
               <td className="num w-[136px] text-right">{inr(invoice.gross_amount)}</td>
               <td className="num w-[76px] whitespace-nowrap">
@@ -391,10 +337,10 @@ function SeededHistory({ list }: { list: RunList }) {
               </td>
               <td className="w-[94px] text-muted-foreground">—</td>
               <td className="truncate text-[13px] text-muted-foreground">
-                <Tag className="mr-2">Seeded history</Tag>Approved before the demo started
+                <Tag className="mr-2">Seeded history</Tag>Not run through the app
               </td>
-              <td className="w-[150px] text-xs">
-                <StateLabel state="approved" />
+              <td className="w-[178px] text-xs">
+                <StateLabel state="approved" label="Approved before the demo" />
               </td>
             </tr>
           ))}

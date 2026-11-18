@@ -90,11 +90,47 @@ def test_stats_count_runs_by_outcome_and_add_up_the_approved_value(api):
 
     stats = api.client.get("/api/stats").json()
     assert stats == {
-        "processed": 4, "auto_approved": 1, "auto_approved_percent": 25.0,
-        "awaiting_review": 1, "approved_by_reviewer": 1, "rejected": 1,
-        "rejected_by_reviewer": 0, "failed": 0, "in_progress": 0,
-        "value_approved_pretax": "375000.00", "value_approved_gross": "442500.00",
-        "seeded_invoices": 2}
+        "total_runs": 4, "processed": 4, "approved": 2, "auto_approved": 1,
+        "auto_approved_percent": 25.0, "approved_by_reviewer": 1, "awaiting_review": 1,
+        "rejected": 1, "rejected_by_process": 1, "rejected_by_reviewer": 0, "failed": 0,
+        "in_progress": 0, "value_approved_pretax": "375000.00",
+        "value_approved_gross": "442500.00", "seeded_invoices": 2}
+
+
+def test_the_dashboard_tiles_agree_with_the_runs_listed_under_each_filter(api):
+    """The dashboard shows the stats as tiles and filters the runs list by state. For the
+    two to agree, each total must equal the number of runs in the matching states, also
+    after a reviewer has approved one REVIEW run and rejected another."""
+
+    def check():
+        stats = api.client.get("/api/stats").json()
+        states = [run["state"] for run in api.client.get("/api/runs").json()["runs"]]
+        assert stats["total_runs"] == len(states)
+        assert stats["approved"] == sum(s in ("approved", "approved_by_reviewer") for s in states)
+        assert stats["awaiting_review"] == states.count("awaiting_review")
+        assert stats["rejected"] == sum(s in ("rejected", "rejected_by_reviewer") for s in states)
+        assert stats["rejected_by_process"] == states.count("rejected")
+        assert stats["rejected_by_reviewer"] == states.count("rejected_by_reviewer")
+        return stats
+
+    check()  # nothing run yet
+    submit(api, "acme_2026-11-05.pdf")  # APPROVE
+    submit(api, "quickfix_2026-11-09.pdf")  # REJECT
+    submit(api, "corelight_2026-11-10.pdf")  # REVIEW, left waiting
+    to_approve = submit(api, "sharma_2026-11-08.pdf")  # REVIEW
+    to_reject = submit(api, "acme_2026-10-03.pdf")  # REVIEW
+    api.client.post("/api/runs", files={"file": ("notes.pdf", b"not a pdf")})  # fails
+    before = check()
+    assert (before["approved"], before["awaiting_review"], before["rejected"]) == (1, 3, 1)
+
+    api.client.post(f"/api/runs/{to_approve['id']}/resolve",
+                    json={"action": "approve", "comment": "ok"})
+    api.client.post(f"/api/runs/{to_reject['id']}/resolve",
+                    json={"action": "reject", "comment": "same bill"})
+    after = check()
+    assert (after["approved"], after["awaiting_review"], after["rejected"]) == (2, 1, 2)
+    assert (after["rejected_by_process"], after["rejected_by_reviewer"]) == (1, 1)
+    assert (after["total_runs"], after["failed"]) == (6, 1)
 
 
 def test_a_sample_preview_is_a_png_and_an_unknown_sample_is_404(api):
