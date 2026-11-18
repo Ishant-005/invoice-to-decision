@@ -47,8 +47,11 @@ Run from the repo root. Needs Python 3.12, uv, Node and npm.
 | `make lint` | `ruff` on the backend, `oxlint` on the frontend |
 | `make build` | Production build of the frontend into `frontend/dist` |
 | `make backend` / `make frontend` | Run just one of the two servers |
+| `make seed` | Reset the database (`var/app.db`) to the seed data and print the PO balances |
+| `make invoices` | Regenerate the 15 invoice PDFs, `expected.json` and `seed_invoices.json` from `scripts/invoice_definitions.json` (needs Playwright's Chromium; installs it if missing) |
+| `make check-invoices` | Recompute every invoice figure and check each PDF's text layer (scans must have none) |
 
-Not built yet (added in later milestones): `make seed`, `make invoices`, `make eval`.
+Not built yet (added in a later milestone): `make eval`.
 
 Useful one-offs:
 
@@ -56,4 +59,5 @@ Useful one-offs:
 - Add a backend dependency: `cd backend && uv add <package>` (dev-only: `uv add --dev <package>`)
 - Add a shadcn/ui component: `cd frontend && npx shadcn@latest add <component>`
 - Health check: `curl http://localhost:8000/api/health`
+- Reset demo data on a running server: `curl -X POST http://localhost:8000/api/demo/reset`
 - CI status: `gh run list --limit 3`
