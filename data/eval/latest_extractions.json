@@ -1,0 +1,509 @@
+{
+  "_about": "What the live model returned in the latest `make eval` run, per file.",
+  "run_at": "2026-11-18 15:25 UTC",
+  "model": "claude-sonnet-5-5",
+  "prompt_version": "v1",
+  "extractions": {
+    "01_acme_clean.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Acme Packaging Pvt Ltd",
+      "vendor_tax_id": "06AAACA0001A1Z1",
+      "invoice_number": "INV-1042",
+      "invoice_date": "2026-11-05",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2231",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Corrugated box 12x10x8",
+          "quantity": "500",
+          "unit_price": "180.00",
+          "amount": "90000.00"
+        },
+        {
+          "description": "Bubble wrap roll",
+          "quantity": "200",
+          "unit_price": "450.00",
+          "amount": "90000.00"
+        }
+      ],
+      "subtotal": "180000.00",
+      "tax_amount": "32400.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "212400.00",
+      "evidence": {
+        "vendor_name": "Acme Packaging Pvt Ltd",
+        "invoice_number": "Invoice No. INV-1042",
+        "invoice_date": "Invoice Date 05-Nov-2026",
+        "po_reference": "PO No. PO-2231",
+        "total": "Grand Total (₹) 2,12,400.00"
+      },
+      "notes": "Line 2 amount (200 x 450.00) is printed as 90,000.00, which is correct, but the line amounts are reported as printed. Amount in words reads Two Lakh Twelve Thousand Four Hundred."
+    },
+    "02_brightline_tax_inclusive.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Brightline Logistics LLP",
+      "vendor_tax_id": "07AAAFB0002B1ZP",
+      "invoice_number": "BL/26-27/0193",
+      "invoice_date": "2026-11-02",
+      "date_is_ambiguous": false,
+      "po_reference": "PO 2240",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Freight services, October 2026, Delhi NCR",
+          "quantity": null,
+          "unit_price": null,
+          "amount": null
+        }
+      ],
+      "subtotal": null,
+      "tax_amount": null,
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": true,
+      "total": "118000",
+      "evidence": {
+        "vendor_name": "Brightline Logistics LLP",
+        "invoice_number": "BILL # BL/26-27/0193",
+        "invoice_date": "ISSUED 2 November 2026",
+        "po_reference": "PURCHASE ORDER PO 2240",
+        "total": "Total ₹1,18,000 inclusive of GST @ 18%"
+      },
+      "notes": "Single service line with no quantity, unit price or amount. Only a GST-inclusive total is printed; no subtotal or tax amount shown."
+    },
+    "03_sharma_scan.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "SHARMA OFFICE SUPPLIES",
+      "vendor_tax_id": "06AAAPS0003S1ZP",
+      "invoice_number": "SOS-778",
+      "invoice_date": "2026-10-28",
+      "date_is_ambiguous": false,
+      "po_reference": "P.O. #2252",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "A4 paper ream",
+          "quantity": "40",
+          "unit_price": "320",
+          "amount": "12800"
+        },
+        {
+          "description": "Printer toner",
+          "quantity": "25",
+          "unit_price": "2400",
+          "amount": "60000"
+        }
+      ],
+      "subtotal": "72800",
+      "tax_amount": "13104",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "85904",
+      "evidence": {
+        "vendor_name": "SHARMA OFFICE SUPPLIES",
+        "invoice_number": "Ref: SOS-778",
+        "invoice_date": "Dated: 28th October 2026",
+        "po_reference": "Against your order: P.O. #2252",
+        "total": "TOTAL Rs. 85,904"
+      },
+      "notes": null
+    },
+    "04_zenith_october.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Zenith Facility Services Pvt Ltd",
+      "vendor_tax_id": "06AAACZ0005Z1ZT",
+      "invoice_number": "ZFS-0934",
+      "invoice_date": "2026-10-31",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2260",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Housekeeping contract, monthly - October 2026",
+          "quantity": "1",
+          "unit_price": "100000.00",
+          "amount": "100000.00"
+        }
+      ],
+      "subtotal": "100000.00",
+      "tax_amount": "18000.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "118000.00",
+      "evidence": {
+        "vendor_name": "Zenith Facility Services Pvt Ltd",
+        "invoice_number": "Invoice No. ZFS-0934",
+        "invoice_date": "Invoice Date 31-Oct-2026",
+        "po_reference": "PO No. PO-2260",
+        "total": "Grand Total (₹) 1,18,000.00"
+      },
+      "notes": "Amount in words reads \"One Lakh Eighteen Thousand\", matching the printed grand total."
+    },
+    "05_zenith_over_balance.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Zenith Facility Services Pvt Ltd",
+      "vendor_tax_id": "06AAACZ0005Z1ZT",
+      "invoice_number": "ZFS-0958",
+      "invoice_date": "2026-11-14",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2260",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Housekeeping contract, monthly - November 2026",
+          "quantity": "1",
+          "unit_price": "100000.00",
+          "amount": "100000.00"
+        },
+        {
+          "description": "Additional deep cleaning",
+          "quantity": "1",
+          "unit_price": "140000.00",
+          "amount": "140000.00"
+        }
+      ],
+      "subtotal": "240000.00",
+      "tax_amount": "43200.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "283200.00",
+      "evidence": {
+        "vendor_name": "Zenith Facility Services Pvt Ltd",
+        "invoice_number": "Invoice No. ZFS-0958",
+        "invoice_date": "Invoice Date 14-Nov-2026",
+        "po_reference": "PO No. PO-2260",
+        "total": "Grand Total (₹) 2,83,200.00"
+      },
+      "notes": "Amount in words reads Two Lakh Eighty Three Thousand Two Hundred, which matches the printed grand total."
+    },
+    "06_corelight_freight.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Corelight Electricals Pvt Ltd",
+      "vendor_tax_id": "27AAACC0004C1ZO",
+      "invoice_number": "CE-5521",
+      "invoice_date": "2026-11-06",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2275",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "LED panel light 40W",
+          "quantity": "100",
+          "unit_price": "1500.00",
+          "amount": "150000.00"
+        },
+        {
+          "description": "Freight",
+          "quantity": "1",
+          "unit_price": "1200.00",
+          "amount": "1200.00"
+        }
+      ],
+      "subtotal": "151200.00",
+      "tax_amount": "27216.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "178416.00",
+      "evidence": {
+        "vendor_name": "Corelight Electricals Pvt Ltd",
+        "invoice_number": "Doc. No. CE-5521",
+        "invoice_date": "Dated 06 Nov 2026",
+        "po_reference": "Buyer's Order Ref. PO-2275",
+        "total": "Grand Total (INR) 1,78,416.00"
+      },
+      "notes": null
+    },
+    "07_corelight_price_hike.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Corelight Electricals Pvt Ltd",
+      "vendor_tax_id": "27AAACC0004C1ZO",
+      "invoice_number": "CE-5547",
+      "invoice_date": "2026-11-10",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2281",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "MCB distribution board",
+          "quantity": "60",
+          "unit_price": "2700.00",
+          "amount": "162000.00"
+        }
+      ],
+      "subtotal": "162000.00",
+      "tax_amount": "29160.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "191160.00",
+      "evidence": {
+        "vendor_name": "Corelight Electricals Pvt Ltd",
+        "invoice_number": "Doc. No. CE-5547",
+        "invoice_date": "Dated 10 Nov 2026",
+        "po_reference": "Buyer's Order Ref. PO-2281",
+        "total": "Grand Total (INR) 1,91,160.00"
+      },
+      "notes": null
+    },
+    "08_acme_near_duplicate.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Acme Packaging Pvt Ltd",
+      "vendor_tax_id": "06AAACA0001A1Z1",
+      "invoice_number": "INV-1017-A",
+      "invoice_date": "2026-10-03",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2219",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Shipping carton 18x12x10",
+          "quantity": "1000",
+          "unit_price": "100.00",
+          "amount": "100000.00"
+        }
+      ],
+      "subtotal": "100000.00",
+      "tax_amount": "18000.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "118000.00",
+      "evidence": {
+        "vendor_name": "Acme Packaging Pvt Ltd",
+        "invoice_number": "Invoice No. INV-1017-A",
+        "invoice_date": "Invoice Date 03-Oct-2026",
+        "po_reference": "PO No. PO-2219",
+        "total": "Grand Total (₹) 1,18,000.00"
+      },
+      "notes": null
+    },
+    "09_sharma_no_po.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "SHARMA OFFICE SUPPLIES",
+      "vendor_tax_id": "06AAAPS0003S1ZP",
+      "invoice_number": "SOS-801",
+      "invoice_date": "2026-11-08",
+      "date_is_ambiguous": false,
+      "po_reference": null,
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Ergonomic office chairs (mesh back)",
+          "quantity": "30",
+          "unit_price": "6500",
+          "amount": "195000"
+        }
+      ],
+      "subtotal": "195000",
+      "tax_amount": "35100",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "230100",
+      "evidence": {
+        "vendor_name": "SHARMA OFFICE SUPPLIES",
+        "invoice_number": "Ref: SOS-801",
+        "invoice_date": "Dated: 8th November 2026",
+        "po_reference": null,
+        "total": "TOTAL Rs. 2,30,100"
+      },
+      "notes": "The printed GST of 35,100 does not equal 18% of the subtotal 1,95,000, which would be 35,100 only if correct; values are reported as printed. No PO reference is printed."
+    },
+    "10_corelight_damaged_scan.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Corelight Electricals Pvt Ltd",
+      "vendor_tax_id": "27AAACC0004C1ZO",
+      "invoice_number": null,
+      "invoice_date": "2026-11-11",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2296",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Copper cable 2.5 sq mm, 90 m coil",
+          "quantity": "200",
+          "unit_price": "1100.00",
+          "amount": "220000.00"
+        }
+      ],
+      "subtotal": "220000.00",
+      "tax_amount": "39600.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": null,
+      "evidence": {
+        "vendor_name": "Corelight Electricals Pvt Ltd",
+        "invoice_number": null,
+        "invoice_date": "Dated 11 Nov 2026",
+        "po_reference": "Buyer's Order Ref. PO-2296",
+        "total": null
+      },
+      "notes": "The Grand Total amount is covered by a black ink blot and is unreadable. The Doc. No. field is blank, so there is no invoice number."
+    },
+    "11_acme_name_variant.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "ACME PACKAGING PRIVATE LIMITED",
+      "vendor_tax_id": null,
+      "invoice_number": "INV-1058",
+      "invoice_date": "2026-11-12",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2219",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Shipping carton 18x12x10",
+          "quantity": "500",
+          "unit_price": "100.00",
+          "amount": "50000.00"
+        }
+      ],
+      "subtotal": "50000.00",
+      "tax_amount": "9000.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "59000.00",
+      "evidence": {
+        "vendor_name": "ACME PACKAGING PRIVATE LIMITED",
+        "invoice_number": "Invoice No. INV-1058",
+        "invoice_date": "Invoice Date 12-Nov-2026",
+        "po_reference": "PO No. PO-2219",
+        "total": "Grand Total (₹) 59,000.00"
+      },
+      "notes": "Amount in words reads Fifty Nine Thousand, matching the printed total. The only GSTIN printed belongs to the billed-to party, so vendor tax ID is null."
+    },
+    "12_brightline_bad_sum.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Brightline Logistics LLP",
+      "vendor_tax_id": "07AAAFB0002B1ZP",
+      "invoice_number": "BL/26-27/0214",
+      "invoice_date": "2026-11-14",
+      "date_is_ambiguous": false,
+      "po_reference": "PO 2301",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Warehouse-to-store transfers, November - North zone",
+          "quantity": null,
+          "unit_price": null,
+          "amount": "50000"
+        },
+        {
+          "description": "Warehouse-to-store transfers, November - South zone",
+          "quantity": null,
+          "unit_price": null,
+          "amount": "30000"
+        }
+      ],
+      "subtotal": "80000",
+      "tax_amount": "14400",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "95400",
+      "evidence": {
+        "vendor_name": "Brightline Logistics LLP",
+        "invoice_number": "BILL # BL/26-27/0214",
+        "invoice_date": "ISSUED 14 November 2026",
+        "po_reference": "PURCHASE ORDER PO 2301",
+        "total": "Total ₹95,400"
+      },
+      "notes": null
+    },
+    "13_unknown_vendor.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "QUICKFIX HARDWARE CO.",
+      "vendor_tax_id": "06AAAFQ0091Q1Z0",
+      "invoice_number": "QH-0091",
+      "invoice_date": "2026-11-09",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-9999",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Door hinge set, stainless steel",
+          "quantity": "20",
+          "unit_price": "450",
+          "amount": "9000"
+        },
+        {
+          "description": "Cordless drill 18V",
+          "quantity": "10",
+          "unit_price": "3200",
+          "amount": "32000"
+        }
+      ],
+      "subtotal": "41000",
+      "tax_amount": "7380",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "48380",
+      "evidence": {
+        "vendor_name": "QUICKFIX HARDWARE CO.",
+        "invoice_number": "Ref: QH-0091",
+        "invoice_date": "Dated: 9th November 2026",
+        "po_reference": "Against your order: PO-9999",
+        "total": "TOTAL Rs. 48,380"
+      },
+      "notes": "The printed line amounts and totals appear internally consistent. Quantities are printed with the unit 'nos'."
+    },
+    "seed_acme_inv1017.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Acme Packaging Pvt Ltd",
+      "vendor_tax_id": "06AAACA0001A1Z1",
+      "invoice_number": "INV-1017",
+      "invoice_date": "2026-10-03",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2219",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Shipping carton 18x12x10",
+          "quantity": "1000",
+          "unit_price": "100.00",
+          "amount": "100000.00"
+        }
+      ],
+      "subtotal": "100000.00",
+      "tax_amount": "18000.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "118000.00",
+      "evidence": {
+        "vendor_name": "Acme Packaging Pvt Ltd",
+        "invoice_number": "Invoice No. INV-1017",
+        "invoice_date": "Invoice Date 03-Oct-2026",
+        "po_reference": "PO No. PO-2219",
+        "total": "Grand Total (₹) 1,18,000.00"
+      },
+      "notes": "The amount in words reads One Lakh Eighteen Thousand, which matches the printed grand total."
+    },
+    "seed_zenith_zfs0911.pdf": {
+      "document_type": "invoice",
+      "vendor_name": "Zenith Facility Services Pvt Ltd",
+      "vendor_tax_id": "06AAACZ0005Z1ZT",
+      "invoice_number": "ZFS-0911",
+      "invoice_date": "2026-09-30",
+      "date_is_ambiguous": false,
+      "po_reference": "PO-2260",
+      "currency": "INR",
+      "line_items": [
+        {
+          "description": "Housekeeping contract, monthly - September 2026",
+          "quantity": "1",
+          "unit_price": "100000.00",
+          "amount": "100000.00"
+        }
+      ],
+      "subtotal": "100000.00",
+      "tax_amount": "18000.00",
+      "tax_rate_percent": "18",
+      "amounts_tax_inclusive": false,
+      "total": "118000.00",
+      "evidence": {
+        "vendor_name": "Zenith Facility Services Pvt Ltd",
+        "invoice_number": "Invoice No. ZFS-0911",
+        "invoice_date": "Invoice Date 30-Sep-2026",
+        "po_reference": "PO No. PO-2260",
+        "total": "Grand Total (₹) 1,18,000.00"
+      },
+      "notes": "Amount in words reads One Lakh Eighteen Thousand, which matches the printed grand total."
+    }
+  }
+}

@@ -6,6 +6,7 @@ Validate -> Match -> Rules -> Decide.
 
 import json
 from datetime import date
+from decimal import Decimal
 
 from sqlmodel import Session
 
@@ -29,11 +30,14 @@ def fresh_books(session: Session) -> Books:
     return load_books(session)
 
 
-def run_case(books: Books, file_name: str) -> Assessment:
+def run_case(books: Books, file_name: str, record: InvoiceRecord | None = None) -> Assessment:
     """Assess one sample invoice, then record the outcome in the books the way the running
     app will (Milestone 4 does this in the database): an approval adds to the PO's
-    billed-to-date, and the invoice joins the history used for duplicate checks."""
-    record = InvoiceRecord.model_validate(CASES[file_name]["truth"])
+    billed-to-date, and the invoice joins the history used for duplicate checks.
+
+    By default the record is the answer key's ground truth. The end-to-end check passes in
+    what the AI model actually read instead."""
+    record = record or InvoiceRecord.model_validate(CASES[file_name]["truth"])
     file_hash = sha256_of(config.INVOICE_DIR / file_name)
     result = assess(record, books, file_hash, TODAY)
 
@@ -52,3 +56,39 @@ def run_case(books: Books, file_name: str) -> Assessment:
 def flagged_codes(result: Assessment) -> set[str]:
     """Codes of the findings that came out as a warning or a failure."""
     return {f.code for f in result.findings if f.status in ("warn", "fail")}
+
+
+def differences(result: Assessment, expected: dict, books: Books) -> list[str]:
+    """Compare one assessment with its entry in the answer key. Returns one sentence per
+    difference; an empty list means the case matches. Keys the entry does not have are
+    not checked (the sequences only state some of them)."""
+    actual = {
+        "decision": result.decision.decision,
+        "owner": result.decision.owner,
+        "vendor_id": result.matched.vendor_id,
+        "vendor_match": result.matched.vendor_match,
+        "po_id": result.matched.po_id,
+        "po_match_type": result.matched.po_match_type,
+        "pretax_amount": result.validated.pretax_amount,
+        "po_overage": result.ruled.po_overage,
+        "duplicate_of": [d.invoice_number for d in result.ruled.duplicates],
+    }
+    wanted = dict(expected)
+    for key in ("pretax_amount", "po_overage"):
+        if key in wanted:
+            wanted[key] = Decimal(wanted[key])
+    if "duplicate_of" in wanted:
+        wanted["duplicate_of"] = [wanted["duplicate_of"]]
+    if "po_billed_after" in wanted:
+        po = next(p for p in books.purchase_orders if p.id == wanted["po_id"])
+        actual["po_billed_after"] = po.billed_to_date
+        wanted["po_billed_after"] = Decimal(wanted["po_billed_after"])
+
+    found = [f"{key}: expected {wanted[key]}, got {value}"
+             for key, value in actual.items() if key in wanted and wanted[key] != value]
+    flagged = flagged_codes(result)
+    for code in sorted(set(wanted.get("finding_codes", [])) - flagged):
+        found.append(f"finding {code} expected but not raised")
+    for code in sorted(set(wanted.get("absent_codes", [])) & flagged):
+        found.append(f"finding {code} raised but must not be")
+    return found

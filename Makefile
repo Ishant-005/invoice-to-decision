@@ -1,7 +1,6 @@
 # Common commands for the project. Run `make help` to list them.
-# `make eval` from the spec does not exist yet; it is added in the milestone that builds it.
 
-.PHONY: help install dev backend frontend test lint build seed invoices check-invoices decisions
+.PHONY: help install dev backend frontend test lint build seed invoices check-invoices decisions eval e2e
 
 help:
 	@echo "make install   Install backend and frontend dependencies"
@@ -13,6 +12,8 @@ help:
 	@echo "make invoices  Regenerate the test invoice PDFs and the answer key"
 	@echo "make check-invoices  Recompute every invoice figure and check each PDF's text layer"
 	@echo "make decisions  Show the decision for each sample invoice (CASES=\"1 5\" for full detail)"
+	@echo "make eval      LIVE AI: read all 15 PDFs, compare with the answer key, write docs/EXTRACTION_EVAL.md"
+	@echo "make e2e       LIVE AI: 13 cases + 3 sequences through all six stages, write docs/E2E_CHECK.md"
 
 install:
 	cd backend && uv sync
@@ -60,3 +61,15 @@ check-invoices:
 # `make decisions` prints one line per case; `make decisions CASES="1 5 8"` prints those in full.
 decisions:
 	cd backend && uv run python ../scripts/show_decisions.py $(CASES)
+
+# Both targets below call the real Anthropic API (a few US cents each) and need
+# ANTHROPIC_API_KEY in .env. Neither touches the app's database.
+
+# Reads all 15 PDFs with the live model and scores every field against the answer key.
+# `make eval NOTE="what changed"` labels the run in the report's history table.
+eval:
+	cd backend && uv run python ../scripts/eval_extraction.py $(NOTE)
+
+# Live extraction feeding the decision logic: 13 cases and 3 sequences against the answer key.
+e2e:
+	cd backend && uv run python ../scripts/e2e_check.py

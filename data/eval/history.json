@@ -1,0 +1,203 @@
+[
+  {
+    "run_at": "2026-11-18 15:23 UTC",
+    "model": "claude-sonnet-5-5",
+    "effort": "low",
+    "prompt_version": "v1",
+    "note": "First run: prompt v1, effort low",
+    "documents": 15,
+    "failed_documents": 0,
+    "correct": 291,
+    "total": 294,
+    "per_field": {
+      "document_type": {
+        "correct": 15,
+        "total": 15
+      },
+      "vendor_name": {
+        "correct": 12,
+        "total": 15
+      },
+      "vendor_tax_id": {
+        "correct": 15,
+        "total": 15
+      },
+      "invoice_number": {
+        "correct": 15,
+        "total": 15
+      },
+      "invoice_date": {
+        "correct": 15,
+        "total": 15
+      },
+      "date_is_ambiguous": {
+        "correct": 15,
+        "total": 15
+      },
+      "po_reference": {
+        "correct": 15,
+        "total": 15
+      },
+      "currency": {
+        "correct": 15,
+        "total": 15
+      },
+      "subtotal": {
+        "correct": 15,
+        "total": 15
+      },
+      "tax_amount": {
+        "correct": 15,
+        "total": 15
+      },
+      "tax_rate_percent": {
+        "correct": 15,
+        "total": 15
+      },
+      "amounts_tax_inclusive": {
+        "correct": 15,
+        "total": 15
+      },
+      "total": {
+        "correct": 15,
+        "total": 15
+      },
+      "line_items (count)": {
+        "correct": 15,
+        "total": 15
+      },
+      "line: description": {
+        "correct": 21,
+        "total": 21
+      },
+      "line: quantity": {
+        "correct": 21,
+        "total": 21
+      },
+      "line: unit_price": {
+        "correct": 21,
+        "total": 21
+      },
+      "line: amount": {
+        "correct": 21,
+        "total": 21
+      }
+    },
+    "mismatches": [
+      {
+        "file": "03_sharma_scan.pdf",
+        "field": "vendor_name",
+        "expected": "Sharma Office Supplies",
+        "got": "SHARMA OFFICE SUPPLIES"
+      },
+      {
+        "file": "09_sharma_no_po.pdf",
+        "field": "vendor_name",
+        "expected": "Sharma Office Supplies",
+        "got": "SHARMA OFFICE SUPPLIES"
+      },
+      {
+        "file": "13_unknown_vendor.pdf",
+        "field": "vendor_name",
+        "expected": "Quickfix Hardware Co.",
+        "got": "QUICKFIX HARDWARE CO."
+      }
+    ],
+    "input_tokens": 80511,
+    "output_tokens": 5828,
+    "cost_usd": "0.2193",
+    "seconds_total": 58.5,
+    "seconds_slowest": 5.1
+  },
+  {
+    "run_at": "2026-11-18 15:25 UTC",
+    "model": "claude-sonnet-5-5",
+    "effort": "low",
+    "prompt_version": "v1",
+    "note": "Same prompt and settings. Answer key corrected: layout C prints the vendor name in capitals, so the key now says so (3 values)",
+    "documents": 15,
+    "failed_documents": 0,
+    "correct": 294,
+    "total": 294,
+    "per_field": {
+      "document_type": {
+        "correct": 15,
+        "total": 15
+      },
+      "vendor_name": {
+        "correct": 15,
+        "total": 15
+      },
+      "vendor_tax_id": {
+        "correct": 15,
+        "total": 15
+      },
+      "invoice_number": {
+        "correct": 15,
+        "total": 15
+      },
+      "invoice_date": {
+        "correct": 15,
+        "total": 15
+      },
+      "date_is_ambiguous": {
+        "correct": 15,
+        "total": 15
+      },
+      "po_reference": {
+        "correct": 15,
+        "total": 15
+      },
+      "currency": {
+        "correct": 15,
+        "total": 15
+      },
+      "subtotal": {
+        "correct": 15,
+        "total": 15
+      },
+      "tax_amount": {
+        "correct": 15,
+        "total": 15
+      },
+      "tax_rate_percent": {
+        "correct": 15,
+        "total": 15
+      },
+      "amounts_tax_inclusive": {
+        "correct": 15,
+        "total": 15
+      },
+      "total": {
+        "correct": 15,
+        "total": 15
+      },
+      "line_items (count)": {
+        "correct": 15,
+        "total": 15
+      },
+      "line: description": {
+        "correct": 21,
+        "total": 21
+      },
+      "line: quantity": {
+        "correct": 21,
+        "total": 21
+      },
+      "line: unit_price": {
+        "correct": 21,
+        "total": 21
+      },
+      "line: amount": {
+        "correct": 21,
+        "total": 21
+      }
+    },
+    "mismatches": [],
+    "input_tokens": 80511,
+    "output_tokens": 5816,
+    "cost_usd": "0.2192",
+    "seconds_total": 56.4,
+    "seconds_slowest": 5.0
+  }
+]
