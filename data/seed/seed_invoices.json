@@ -1,0 +1,63 @@
+{
+  "_about": "Already-approved invoices loaded as history at seed time. 'extraction' is the stored reading of the PDF, so seeding never calls the AI model. Generated from scripts/invoice_definitions.json; edit that file, not this one.",
+  "invoices": [
+    {
+      "file": "seed_acme_inv1017.pdf",
+      "vendor_id": "V-001",
+      "po_id": "PO-2219",
+      "state": "approved",
+      "extraction": {
+        "document_type": "invoice",
+        "vendor_name": "Acme Packaging Pvt Ltd",
+        "vendor_tax_id": "06AAACA0001A1Z1",
+        "invoice_number": "INV-1017",
+        "invoice_date": "2026-10-03",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2219",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Shipping carton 18x12x10",
+            "quantity": "1000",
+            "unit_price": "100.00",
+            "amount": "100000.00"
+          }
+        ],
+        "subtotal": "100000.00",
+        "tax_amount": "18000.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "118000.00"
+      }
+    },
+    {
+      "file": "seed_zenith_zfs0911.pdf",
+      "vendor_id": "V-005",
+      "po_id": "PO-2260",
+      "state": "approved",
+      "extraction": {
+        "document_type": "invoice",
+        "vendor_name": "Zenith Facility Services Pvt Ltd",
+        "vendor_tax_id": "06AAACZ0005Z1ZT",
+        "invoice_number": "ZFS-0911",
+        "invoice_date": "2026-09-30",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2260",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Housekeeping contract, monthly - September 2026",
+            "quantity": "1",
+            "unit_price": "100000.00",
+            "amount": "100000.00"
+          }
+        ],
+        "subtotal": "100000.00",
+        "tax_amount": "18000.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "118000.00"
+      }
+    }
+  ]
+}

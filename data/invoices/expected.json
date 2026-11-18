@@ -1,0 +1,666 @@
+{
+  "_about": "Answer key for the 13 test invoices. Generated from scripts/invoice_definitions.json by scripts/generate_invoices.py; edit that file, not this one. 'truth' is what a perfect reader extracts (amounts are strings, read them as Decimal). 'expected' assumes a fresh reset: finding_codes must appear as a warning or failure, absent_codes must not.",
+  "invoices": [
+    {
+      "case": 1,
+      "file": "01_acme_clean.pdf",
+      "description": "Acme Packaging: corrugated boxes and bubble wrap, quoting PO-2231",
+      "layout": "A",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Acme Packaging Pvt Ltd",
+        "vendor_tax_id": "06AAACA0001A1Z1",
+        "invoice_number": "INV-1042",
+        "invoice_date": "2026-11-05",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2231",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Corrugated box 12x10x8",
+            "quantity": "500",
+            "unit_price": "180.00",
+            "amount": "90000.00"
+          },
+          {
+            "description": "Bubble wrap roll",
+            "quantity": "200",
+            "unit_price": "450.00",
+            "amount": "90000.00"
+          }
+        ],
+        "subtotal": "180000.00",
+        "tax_amount": "32400.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "212400.00"
+      },
+      "expected": {
+        "decision": "APPROVE",
+        "owner": "none",
+        "vendor_id": "V-001",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2231",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "180000.00",
+        "finding_codes": [],
+        "absent_codes": [],
+        "note": "Happy path. PO-2231 billed-to-date becomes 1,80,000 (fully billed)."
+      }
+    },
+    {
+      "case": 2,
+      "file": "02_brightline_tax_inclusive.pdf",
+      "description": "Brightline Logistics: October freight as a single tax-inclusive amount",
+      "layout": "B",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Brightline Logistics LLP",
+        "vendor_tax_id": "07AAAFB0002B1ZP",
+        "invoice_number": "BL/26-27/0193",
+        "invoice_date": "2026-11-02",
+        "date_is_ambiguous": false,
+        "po_reference": "PO 2240",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Freight services, October 2026, Delhi NCR",
+            "quantity": null,
+            "unit_price": null,
+            "amount": null
+          }
+        ],
+        "subtotal": null,
+        "tax_amount": null,
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": true,
+        "total": "118000.00"
+      },
+      "expected": {
+        "decision": "APPROVE",
+        "owner": "none",
+        "vendor_id": "V-002",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2240",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "100000.00",
+        "finding_codes": [],
+        "absent_codes": [
+          "TAX_UNRESOLVED"
+        ],
+        "note": "No subtotal or tax is printed. Pre-tax is derived: 1,18,000 / 1.18 = 1,00,000."
+      }
+    },
+    {
+      "case": 3,
+      "file": "03_sharma_scan.pdf",
+      "description": "Sharma Office Supplies: paper and toner, a scanned bill",
+      "layout": "C",
+      "scanned": true,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Sharma Office Supplies",
+        "vendor_tax_id": "06AAAPS0003S1ZP",
+        "invoice_number": "SOS-778",
+        "invoice_date": "2026-10-28",
+        "date_is_ambiguous": false,
+        "po_reference": "P.O. #2252",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "A4 paper ream",
+            "quantity": "40",
+            "unit_price": "320.00",
+            "amount": "12800.00"
+          },
+          {
+            "description": "Printer toner",
+            "quantity": "25",
+            "unit_price": "2400.00",
+            "amount": "60000.00"
+          }
+        ],
+        "subtotal": "72800.00",
+        "tax_amount": "13104.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "85904.00"
+      },
+      "expected": {
+        "decision": "APPROVE",
+        "owner": "none",
+        "vendor_id": "V-003",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2252",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "72800.00",
+        "finding_codes": [],
+        "absent_codes": [],
+        "note": "Image-only PDF. The PO is printed as 'P.O. #2252' and must normalise to PO-2252."
+      }
+    },
+    {
+      "case": 4,
+      "file": "04_zenith_october.pdf",
+      "description": "Zenith Facility Services: housekeeping for October",
+      "layout": "A",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Zenith Facility Services Pvt Ltd",
+        "vendor_tax_id": "06AAACZ0005Z1ZT",
+        "invoice_number": "ZFS-0934",
+        "invoice_date": "2026-10-31",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2260",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Housekeeping contract, monthly - October 2026",
+            "quantity": "1",
+            "unit_price": "100000.00",
+            "amount": "100000.00"
+          }
+        ],
+        "subtotal": "100000.00",
+        "tax_amount": "18000.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "118000.00"
+      },
+      "expected": {
+        "decision": "APPROVE",
+        "owner": "none",
+        "vendor_id": "V-005",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2260",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "100000.00",
+        "po_billed_after": "200000.00",
+        "finding_codes": [],
+        "absent_codes": [
+          "DUPLICATE_EXACT",
+          "DUPLICATE_PROBABLE"
+        ],
+        "note": "Same vendor and amount as seeded ZFS-0911 but a different date and an unrelated number: a monthly service, not a duplicate."
+      }
+    },
+    {
+      "case": 5,
+      "file": "05_zenith_over_balance.pdf",
+      "description": "Zenith Facility Services: housekeeping for November plus additional deep cleaning",
+      "layout": "A",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Zenith Facility Services Pvt Ltd",
+        "vendor_tax_id": "06AAACZ0005Z1ZT",
+        "invoice_number": "ZFS-0958",
+        "invoice_date": "2026-11-14",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2260",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Housekeeping contract, monthly - November 2026",
+            "quantity": "1",
+            "unit_price": "100000.00",
+            "amount": "100000.00"
+          },
+          {
+            "description": "Additional deep cleaning",
+            "quantity": "1",
+            "unit_price": "140000.00",
+            "amount": "140000.00"
+          }
+        ],
+        "subtotal": "240000.00",
+        "tax_amount": "43200.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "283200.00"
+      },
+      "expected": {
+        "decision": "REVIEW",
+        "owner": "procurement",
+        "vendor_id": "V-005",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2260",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "240000.00",
+        "po_overage": "40000.00",
+        "finding_codes": [
+          "PO_BALANCE",
+          "LINE_NOT_ON_PO"
+        ],
+        "absent_codes": [],
+        "note": "Fresh reset: 1,00,000 billed + 2,40,000 = 3,40,000 against a PO of 3,00,000, over by 40,000. After case 4 the overage is 1,40,000."
+      }
+    },
+    {
+      "case": 6,
+      "file": "06_corelight_freight.pdf",
+      "description": "Corelight Electricals: LED panel lights with a freight charge",
+      "layout": "D",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Corelight Electricals Pvt Ltd",
+        "vendor_tax_id": "27AAACC0004C1ZO",
+        "invoice_number": "CE-5521",
+        "invoice_date": "2026-11-06",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2275",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "LED panel light 40W",
+            "quantity": "100",
+            "unit_price": "1500.00",
+            "amount": "150000.00"
+          },
+          {
+            "description": "Freight",
+            "quantity": "1",
+            "unit_price": "1200.00",
+            "amount": "1200.00"
+          }
+        ],
+        "subtotal": "151200.00",
+        "tax_amount": "27216.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "178416.00"
+      },
+      "expected": {
+        "decision": "APPROVE",
+        "owner": "none",
+        "vendor_id": "V-004",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2275",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "151200.00",
+        "po_overage": "1200.00",
+        "finding_codes": [
+          "PO_BALANCE",
+          "LINE_NOT_ON_PO"
+        ],
+        "absent_codes": [],
+        "note": "Over the PO by 1,200 (0.8%), inside the tolerance of 2% and 5,000: approved with a note. Both findings are warnings."
+      }
+    },
+    {
+      "case": 7,
+      "file": "07_corelight_price_hike.pdf",
+      "description": "Corelight Electricals: MCB distribution boards",
+      "layout": "D",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Corelight Electricals Pvt Ltd",
+        "vendor_tax_id": "27AAACC0004C1ZO",
+        "invoice_number": "CE-5547",
+        "invoice_date": "2026-11-10",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2281",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "MCB distribution board",
+            "quantity": "60",
+            "unit_price": "2700.00",
+            "amount": "162000.00"
+          }
+        ],
+        "subtotal": "162000.00",
+        "tax_amount": "29160.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "191160.00"
+      },
+      "expected": {
+        "decision": "REVIEW",
+        "owner": "procurement",
+        "vendor_id": "V-004",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2281",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "162000.00",
+        "po_overage": "12000.00",
+        "finding_codes": [
+          "PRICE_VARIANCE",
+          "PO_BALANCE"
+        ],
+        "absent_codes": [],
+        "note": "Unit price 2,700 against a PO price of 2,500 (+8%). The same price rise also takes the PO 12,000 over its value."
+      }
+    },
+    {
+      "case": 8,
+      "file": "08_acme_near_duplicate.pdf",
+      "description": "Acme Packaging: 1,000 shipping cartons, a scanned copy",
+      "layout": "A",
+      "scanned": true,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Acme Packaging Pvt Ltd",
+        "vendor_tax_id": "06AAACA0001A1Z1",
+        "invoice_number": "INV-1017-A",
+        "invoice_date": "2026-10-03",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2219",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Shipping carton 18x12x10",
+            "quantity": "1000",
+            "unit_price": "100.00",
+            "amount": "100000.00"
+          }
+        ],
+        "subtotal": "100000.00",
+        "tax_amount": "18000.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "118000.00"
+      },
+      "expected": {
+        "decision": "REVIEW",
+        "owner": "ap",
+        "vendor_id": "V-001",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2219",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "100000.00",
+        "duplicate_of": "INV-1017",
+        "finding_codes": [
+          "DUPLICATE_PROBABLE"
+        ],
+        "absent_codes": [
+          "DUPLICATE_EXACT",
+          "PO_BALANCE"
+        ],
+        "note": "Same bill as seeded INV-1017 with an altered number and a different file. The PO has exactly 1,00,000 left, so the balance check passes and only duplicate detection catches it."
+      }
+    },
+    {
+      "case": 9,
+      "file": "09_sharma_no_po.pdf",
+      "description": "Sharma Office Supplies: office chairs, no purchase order quoted",
+      "layout": "C",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Sharma Office Supplies",
+        "vendor_tax_id": "06AAAPS0003S1ZP",
+        "invoice_number": "SOS-801",
+        "invoice_date": "2026-11-08",
+        "date_is_ambiguous": false,
+        "po_reference": null,
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Ergonomic office chairs (mesh back)",
+            "quantity": "30",
+            "unit_price": "6500.00",
+            "amount": "195000.00"
+          }
+        ],
+        "subtotal": "195000.00",
+        "tax_amount": "35100.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "230100.00"
+      },
+      "expected": {
+        "decision": "REVIEW",
+        "owner": "ap",
+        "vendor_id": "V-003",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2290",
+        "po_match_type": "implied_single",
+        "pretax_amount": "195000.00",
+        "finding_codes": [],
+        "absent_codes": [],
+        "note": "No PO is printed. The search should find exactly one strong candidate, PO-2290, and suggest it. An implied match never auto-approves. The spec names no finding code for this, so the test is on po_match_type."
+      }
+    },
+    {
+      "case": 10,
+      "file": "10_corelight_damaged_scan.pdf",
+      "description": "Corelight Electricals: copper cable, a damaged scan",
+      "layout": "D",
+      "scanned": true,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Corelight Electricals Pvt Ltd",
+        "vendor_tax_id": "27AAACC0004C1ZO",
+        "invoice_number": null,
+        "invoice_date": "2026-11-11",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2296",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Copper cable 2.5 sq mm, 90 m coil",
+            "quantity": "200",
+            "unit_price": "1100.00",
+            "amount": "220000.00"
+          }
+        ],
+        "subtotal": "220000.00",
+        "tax_amount": "39600.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": null
+      },
+      "expected": {
+        "decision": "REVIEW",
+        "owner": "vendor",
+        "vendor_id": "V-004",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2296",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "220000.00",
+        "finding_codes": [
+          "REQUIRED_FIELDS",
+          "DUPLICATE_CHECK_PARTIAL"
+        ],
+        "absent_codes": [],
+        "note": "The invoice number box is empty and the total (2,59,600 before the stain) cannot be read. Both must come back null; the reader must not add subtotal and tax to fill the gap."
+      }
+    },
+    {
+      "case": 11,
+      "file": "11_acme_name_variant.pdf",
+      "description": "Acme Packaging: 500 shipping cartons, company name printed in full, no GSTIN",
+      "layout": "A",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "ACME PACKAGING PRIVATE LIMITED",
+        "vendor_tax_id": null,
+        "invoice_number": "INV-1058",
+        "invoice_date": "2026-11-12",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-2219",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Shipping carton 18x12x10",
+            "quantity": "500",
+            "unit_price": "100.00",
+            "amount": "50000.00"
+          }
+        ],
+        "subtotal": "50000.00",
+        "tax_amount": "9000.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "59000.00"
+      },
+      "expected": {
+        "decision": "APPROVE",
+        "owner": "none",
+        "vendor_id": "V-001",
+        "vendor_match": "name",
+        "po_id": "PO-2219",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "50000.00",
+        "po_billed_after": "150000.00",
+        "finding_codes": [],
+        "absent_codes": [],
+        "note": "No tax ID to match on. 'ACME PACKAGING PRIVATE LIMITED' and 'Acme Packaging Pvt Ltd' both clean to 'acme packaging', an exact cleaned-name match."
+      }
+    },
+    {
+      "case": 12,
+      "file": "12_brightline_bad_sum.pdf",
+      "description": "Brightline Logistics: November warehouse-to-store transfers in two parts",
+      "layout": "B",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Brightline Logistics LLP",
+        "vendor_tax_id": "07AAAFB0002B1ZP",
+        "invoice_number": "BL/26-27/0214",
+        "invoice_date": "2026-11-14",
+        "date_is_ambiguous": false,
+        "po_reference": "PO 2301",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Warehouse-to-store transfers, November - North zone",
+            "quantity": null,
+            "unit_price": null,
+            "amount": "50000.00"
+          },
+          {
+            "description": "Warehouse-to-store transfers, November - South zone",
+            "quantity": null,
+            "unit_price": null,
+            "amount": "30000.00"
+          }
+        ],
+        "subtotal": "80000.00",
+        "tax_amount": "14400.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "95400.00"
+      },
+      "expected": {
+        "decision": "REVIEW",
+        "owner": "vendor",
+        "vendor_id": "V-002",
+        "vendor_match": "tax_id",
+        "po_id": "PO-2301",
+        "po_match_type": "explicit_verified",
+        "pretax_amount": "80000.00",
+        "finding_codes": [
+          "TOTALS"
+        ],
+        "absent_codes": [],
+        "note": "Deliberate error: 80,000 + 14,400 = 94,400 but the invoice states 95,400."
+      }
+    },
+    {
+      "case": 13,
+      "file": "13_unknown_vendor.pdf",
+      "description": "Quickfix Hardware Co.: hinges and cordless drills",
+      "layout": "C",
+      "scanned": false,
+      "truth": {
+        "document_type": "invoice",
+        "vendor_name": "Quickfix Hardware Co.",
+        "vendor_tax_id": "06AAAFQ0091Q1Z0",
+        "invoice_number": "QH-0091",
+        "invoice_date": "2026-11-09",
+        "date_is_ambiguous": false,
+        "po_reference": "PO-9999",
+        "currency": "INR",
+        "line_items": [
+          {
+            "description": "Door hinge set, stainless steel",
+            "quantity": "20",
+            "unit_price": "450.00",
+            "amount": "9000.00"
+          },
+          {
+            "description": "Cordless drill 18V",
+            "quantity": "10",
+            "unit_price": "3200.00",
+            "amount": "32000.00"
+          }
+        ],
+        "subtotal": "41000.00",
+        "tax_amount": "7380.00",
+        "tax_rate_percent": "18",
+        "amounts_tax_inclusive": false,
+        "total": "48380.00"
+      },
+      "expected": {
+        "decision": "REJECT",
+        "owner": "procurement",
+        "vendor_id": null,
+        "vendor_match": "none",
+        "po_id": null,
+        "po_match_type": "not_found",
+        "pretax_amount": "41000.00",
+        "finding_codes": [
+          "VENDOR_NOT_FOUND",
+          "PO_NOT_FOUND"
+        ],
+        "absent_codes": [],
+        "note": "The vendor is not in the vendor master and PO-9999 does not exist."
+      }
+    }
+  ],
+  "sequences": [
+    {
+      "name": "same_file_twice",
+      "steps": [
+        "01_acme_clean.pdf",
+        "01_acme_clean.pdf"
+      ],
+      "expected_last": {
+        "decision": "REJECT",
+        "finding_codes": [
+          "DUPLICATE_EXACT"
+        ]
+      },
+      "note": "No reset between the two runs. The second is an exact duplicate (same file, same vendor and number)."
+    },
+    {
+      "name": "october_then_over_balance",
+      "steps": [
+        "04_zenith_october.pdf",
+        "05_zenith_over_balance.pdf"
+      ],
+      "expected_last": {
+        "decision": "REVIEW",
+        "owner": "procurement",
+        "po_overage": "140000.00",
+        "finding_codes": [
+          "PO_BALANCE"
+        ]
+      },
+      "note": "Case 4 takes PO-2260 to 2,00,000 billed; case 5 then adds 2,40,000 against a PO of 3,00,000."
+    },
+    {
+      "name": "name_variant_then_near_duplicate",
+      "steps": [
+        "11_acme_name_variant.pdf",
+        "08_acme_near_duplicate.pdf"
+      ],
+      "expected_last": {
+        "decision": "REVIEW",
+        "finding_codes": [
+          "DUPLICATE_PROBABLE"
+        ]
+      },
+      "note": "Case 11 takes PO-2219 to 1,50,000 billed. Case 8 is still caught as a probable duplicate of INV-1017 (and is now also 50,000 over the PO)."
+    }
+  ]
+}
