@@ -141,10 +141,46 @@ Limits to be honest about:
 - There are no database migrations; a database from before this milestone must be deleted.
 - Nothing has been seen in a browser yet. That is Milestone 5.
 
+## Milestone 5: Web app
+
+"Verified" means the implementer drove the real app (frontend on 5173, backend on 8000, live
+model) in a headless Chromium browser at 1280 px on 2026-11-18, took screenshots and looked at
+each one. The frontend has no unit tests of its own; `make test` type-checks and builds it.
+
+| Feature | Status | Evidence |
+|---|---|---|
+| Dashboard: five tiles, runs table, decision filter, seeded history, row opens the run | verified | Screenshots with 0, 7, 13 and 14 runs. After all 13 samples: 13 processed, 46.2% auto-approved, 6 awaiting review, 1 rejected, ₹6,54,000 approved before tax (matches the six approved invoices added by hand). Filter "Reject" showed 1 row |
+| New run: upload (click or drop) and a gallery of the 13 samples with real first-page images | verified | Samples started by clicking their cards; an upload made through the file chooser. Drag-and-drop itself was not exercised in the browser |
+| Run view, live: each stage shown as it executes, with the server's measured duration | verified | Screenshot taken mid-run: Receive done (26.9 ms), Extract running, four waiting. Stages then revealed in order with real durations |
+| Run view, as a record opened later from the dashboard | verified | Opened from a dashboard row; all stages shown at once, no pacing note |
+| Decision banner: headline, reasons, owner and next action, what passed / not checked | verified | Screenshots for APPROVE (case 1), REVIEW (cases 5, 8, 9, 10) and REJECT (case 13) |
+| Extract: fields beside the quoted evidence; nulls marked "not found on the document" | verified | Case 10: invoice number and total marked not found; the reader's note names the ink blot |
+| Validate / Rules checklists; Match with vendor, PO, how matched, and the PO balance bar | verified | Case 5: bar shows ₹1,00,000 billed, ₹2,40,000 this invoice, over the PO value by ₹40,000 |
+| Probable duplicate: the earlier invoice side by side | verified | Case 8: both page images and a field-by-field table against seeded INV-1017, 6 of 7 fields the same |
+| Implied PO: the suggested PO with its evidence and a confirm action | verified | Case 9: PO-2290 suggested at 94 / 100, PO-2252 shown as considered; "Confirm PO-2290 and approve" pressed, PO-2290 then fully billed |
+| Reviewer approve / reject with a required comment | verified | Empty comment refused on screen; case 9 approved and case 8 rejected through the UI; the dashboard showed "Approved by reviewer" and "Rejected by reviewer" |
+| Purchase orders screen: value, billed, remaining, lines and invoices per PO | verified | Screenshot with PO-2260 open; PO-2275 shows −₹1,200 "over value" after case 6 |
+| How it works: process map, rules read from the API, assumptions | verified | Screenshot; the rules table shows the values in `config/rules.yaml` |
+| Reset button with a confirmation dialog | verified | Used by `make ui-check`: dialog confirmed, dashboard came back empty |
+| Failed run shown as "No decision" with the stage and the reason | verified | A text file uploaded with a .pdf name: "The run stopped in the Receive stage" |
+| Error state (run not found), empty state (no runs), loading states | verified / implemented | Error and empty states seen in screenshots. Loading states exist on every screen but pass too quickly locally to have been looked at |
+| All 13 samples through the UI after a reset match `expected.json` | verified | `make ui-check`: 13 of 13, run twice (once with the scratch script, once as `scripts/ui_check.py`). All extractions were live |
+| New endpoints: invoice detail, invoice page image, sample preview | tested + verified | 3 tests in `tests/integration/test_reference_api.py`; used by the screens above |
+
+Limits to be honest about:
+
+- Checked in headless Chromium only, at 1280 px wide. Not checked in Safari or Firefox, on a
+  phone, or with a screen reader.
+- The three sequence cases were not all replayed in the browser. "Case 4 then case 5" was (the
+  13-sample run does it: case 5 showed an overage of ₹1,40,000). "Same file twice" and "case 11
+  then case 8" remain covered by the API tests and `make e2e` only.
+- The built frontend is not yet served by FastAPI; the app runs as two dev servers (`make dev`).
+- The visual design was reviewed by the implementer from screenshots; no one else has looked.
+
 ## Known issues
 
-- None open. (The Starlette test-client deprecation warning noted earlier no longer appears: 290 tests pass with no warnings.)
+- None open. (The Starlette test-client deprecation warning noted earlier no longer appears: 293 tests pass with no warnings.)
 
-## Milestones 5 to 7
+## Milestones 6 and 7
 
 Not started.
