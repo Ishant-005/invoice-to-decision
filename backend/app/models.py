@@ -2,7 +2,7 @@
 
 Master data (restored on every reset):  Vendor, PurchaseOrder, POLine
 History (wiped on reset, then re-seeded): Invoice, Run, StageEvent
-Kept across resets:                       SavedExtraction
+Kept across resets:                       SavedExtraction, LiveCallCount
 
 Every money column uses DecimalText (see db.py), so amounts are exact.
 """
@@ -116,3 +116,11 @@ class SavedExtraction(SQLModel, table=True):
     record: dict = Field(sa_column=Column(JSON))
     source: str  # "live" = read by the AI model; "seed_file" = loaded from data/seed
     created_at: datetime = Field(default_factory=now_utc)
+
+
+class LiveCallCount(SQLModel, table=True):
+    """How many live AI calls were made on one day (UTC). The Extract stage checks this
+    against MAX_LIVE_EXTRACTIONS_PER_DAY so a public link cannot run up the API bill."""
+
+    day: date = Field(primary_key=True)
+    calls: int = 0
