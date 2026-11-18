@@ -1,0 +1,87 @@
+<!-- Layout B: modern minimal. No boxes, lots of white space, description and amount only. -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 10pt; color: #22252a; }
+  .page { width: 210mm; height: 297mm; padding: 22mm 22mm 18mm; position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .word { font-size: 34pt; font-weight: 200; letter-spacing: -1px; line-height: 1; }
+  .brand { text-align: right; }
+  .brand .name { font-size: 12pt; font-weight: 700; }
+  .brand .name span { color: {{ lh.accent }}; }
+  .brand .tag { color: #8a9099; font-size: 8.5pt; margin-top: 1mm; }
+  .bar { height: 3px; width: 18mm; background: {{ lh.accent }}; margin: 7mm 0 12mm; }
+  .meta { display: flex; gap: 14mm; }
+  .k { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 1.2px; color: #8a9099; margin-bottom: 1.5mm; }
+  .v { font-size: 10.5pt; font-weight: 500; }
+  .to { margin-top: 12mm; line-height: 1.55; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14mm; }
+  th { text-align: left; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 1.2px; color: #8a9099; font-weight: 500;
+       padding-bottom: 3mm; border-bottom: 1px solid #22252a; }
+  td { padding: 5mm 0; border-bottom: 1px solid #e3e5e8; }
+  .num { text-align: right; white-space: nowrap; }
+  .sums { margin-top: 8mm; margin-left: auto; width: 78mm; }
+  .sums div { display: flex; justify-content: space-between; padding: 2mm 0; color: #555b63; }
+  .sums .total { border-top: 1px solid #22252a; margin-top: 2mm; padding-top: 4mm; color: #22252a; font-size: 15pt; font-weight: 700; }
+  .inclusive { margin-top: 12mm; text-align: right; font-size: 13pt; }
+  .inclusive b { font-size: 17pt; }
+  .footer { position: absolute; left: 22mm; right: 22mm; bottom: 18mm; display: flex; gap: 10mm; border-top: 1px solid #e3e5e8;
+            padding-top: 5mm; font-size: 8pt; color: #555b63; line-height: 1.6; }
+  .footer > div { flex: 1; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <div class="word">Invoice</div>
+    <div class="brand">
+      <div class="name"><span>&#9679;</span> {{ lh.name }}</div>
+      <div class="tag">{{ lh.tagline }}</div>
+    </div>
+  </div>
+  <div class="bar"></div>
+
+  <div class="meta">
+    <div><div class="k">Bill #</div><div class="v">{{ invoice_number }}</div></div>
+    <div><div class="k">Issued</div><div class="v">{{ date }}</div></div>
+    {% if po_reference %}<div><div class="k">Purchase order</div><div class="v">{{ po_reference }}</div></div>{% endif %}
+    <div><div class="k">Terms</div><div class="v">Net 30</div></div>
+  </div>
+
+  <div class="to">
+    <div class="k">Billed to</div>
+    <strong>{{ buyer.name }}</strong><br>
+    {% for line in buyer.address %}{{ line }}<br>{% endfor %}
+    GSTIN {{ buyer.gstin }}
+  </div>
+
+  {% if inclusive %}
+  <table>
+    <tr><th>Services provided</th></tr>
+    {% for line in lines %}<tr><td>{{ line.description }}</td></tr>{% endfor %}
+  </table>
+  <div class="inclusive">Total <b id="total-value">₹{{ total }}</b> inclusive of GST @ {{ rate }}%</div>
+  {% else %}
+  <table>
+    <tr><th>Description</th><th class="num">Amount</th></tr>
+    {% for line in lines %}<tr><td>{{ line.description }}</td><td class="num">₹{{ line.amount }}</td></tr>{% endfor %}
+  </table>
+  <div class="sums">
+    <div><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
+    <div><span>GST @ {{ rate }}%</span><span>₹{{ tax }}</span></div>
+    <div class="total"><span>Total</span><span id="total-value">₹{{ total }}</span></div>
+  </div>
+  {% endif %}
+
+  <div class="footer">
+    <div><strong>{{ lh.name }}</strong><br>{% for line in lh.address %}{{ line }}<br>{% endfor %}</div>
+    <div>{% if show_gstin %}GSTIN {{ lh.gstin }}<br>{% endif %}{{ lh.phone }}<br>{{ lh.email }}</div>
+    <div>Pay by bank transfer<br>{{ lh.bank | replace(" | ", "<br>") | safe }}</div>
+  </div>
+</div>
+</body>
+</html>

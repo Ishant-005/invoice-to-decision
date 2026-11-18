@@ -1,0 +1,118 @@
+<!-- Layout D: dense accounting-software style grid, interstate supply so the tax is IGST. -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 8.3pt; color: #000; line-height: 1.35; }
+  .page { width: 210mm; height: 297mm; padding: 11mm 12mm; }
+  .caption { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5mm; }
+  .caption b { font-size: 12pt; letter-spacing: 1px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { border: 1px solid #000; padding: 1.3mm 1.8mm; vertical-align: top; }
+  .k { font-size: 6.8pt; color: #333; display: block; }
+  .v { font-weight: bold; min-height: 3.6mm; display: block; }
+  .seller b { font-size: 11pt; }
+  .items th { font-size: 7.4pt; background: #e9e9e9; text-align: center; }
+  .items td { border-top: 0; border-bottom: 0; }
+  .items .last td { height: 62mm; border-bottom: 1px solid #000; }
+  .num { text-align: right; white-space: nowrap; }
+  .c { text-align: center; }
+  .sum td { font-weight: bold; }
+  .sum.grand td { font-size: 10.5pt; padding: 3.4mm 1.8mm; }
+  .hsn th { font-size: 7.2pt; background: #e9e9e9; }
+  .tiny { font-size: 7pt; }
+  .gap td { border-left: 0; border-right: 0; height: 2.5mm; padding: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="caption"><span></span><b>TAX INVOICE</b><span class="tiny">(ORIGINAL FOR RECIPIENT)</span></div>
+
+  <table>
+    <tr>
+      <td rowspan="3" class="seller" style="width:50%">
+        <b>{{ lh.name }}</b><br>
+        {% for line in lh.address %}{{ line }}<br>{% endfor %}
+        {% if show_gstin %}GSTIN/UIN: <b>{{ lh.gstin }}</b><br>{% endif %}
+        State Name: {{ lh.state }}<br>
+        Contact: {{ lh.phone }} &nbsp; E-Mail: {{ lh.email }}
+      </td>
+      <td style="width:25%"><span class="k">Doc. No.</span><span class="v">{{ invoice_number }}</span></td>
+      <td style="width:25%"><span class="k">Dated</span><span class="v">{{ date }}</span></td>
+    </tr>
+    <tr>
+      <td><span class="k">Buyer's Order Ref.</span><span class="v">{{ po_reference or "" }}</span></td>
+      <td><span class="k">Mode / Terms of Payment</span><span class="v">45 Days</span></td>
+    </tr>
+    <tr>
+      <td><span class="k">Dispatched through</span><span class="v">Road transport</span></td>
+      <td><span class="k">Destination</span><span class="v">Gurugram</span></td>
+    </tr>
+    <tr>
+      <td>
+        <span class="k">Buyer (Bill to)</span>
+        <b>{{ buyer.name }}</b><br>
+        {% for line in buyer.address %}{{ line }}<br>{% endfor %}
+        GSTIN/UIN: {{ buyer.gstin }}<br>
+        Place of Supply: Haryana (06)
+      </td>
+      <td colspan="2">
+        <span class="k">Terms of Delivery</span>
+        Door delivery to buyer's warehouse. Unloading in buyer's scope.<br>
+        Transit insurance in supplier's scope.
+      </td>
+    </tr>
+  </table>
+
+  <table class="items">
+    <tr>
+      <th style="width:8mm">Sl</th><th>Description of Goods / Services</th><th style="width:17mm">HSN/SAC</th>
+      <th style="width:17mm">Quantity</th><th style="width:13mm">Unit</th><th style="width:24mm">Rate</th>
+      <th style="width:32mm">Taxable Value</th>
+    </tr>
+    {% for line in lines %}
+    <tr>
+      <td class="c">{{ line.n }}</td><td><b>{{ line.description }}</b></td><td class="c">{{ line.hsn }}</td>
+      <td class="num">{{ line.quantity }}</td><td class="c">{{ line.unit }}</td><td class="num">{{ line.rate }}</td>
+      <td class="num">{{ line.amount }}</td>
+    </tr>
+    {% endfor %}
+    <tr class="last"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr class="sum"><td colspan="6" class="num">Taxable Value</td><td class="num">{{ subtotal }}</td></tr>
+    <tr class="sum"><td colspan="6" class="num">IGST @ {{ rate }}%</td><td class="num">{{ tax }}</td></tr>
+    <tr class="sum grand"><td colspan="6" class="num">Grand Total (INR)</td><td class="num"><span id="total-value">{{ total }}</span></td></tr>
+  </table>
+
+  <table class="hsn">
+    <tr class="gap"><td colspan="4"></td></tr>
+    <tr><th>HSN/SAC</th><th>Taxable Value</th><th>IGST Rate</th><th>IGST Amount</th></tr>
+    {% for row in hsn_summary %}
+    <tr><td class="c">{{ row.hsn }}</td><td class="num">{{ row.taxable }}</td><td class="c">{{ rate }}%</td><td class="num">{{ row.tax }}</td></tr>
+    {% endfor %}
+    <tr class="sum"><td class="num">Total</td><td class="num">{{ subtotal }}</td><td></td><td class="num">{{ tax }}</td></tr>
+  </table>
+
+  <table>
+    <tr class="gap"><td colspan="2"></td></tr>
+    <tr>
+      <td style="width:55%" class="tiny">
+        <b>Company's Bank Details</b><br>
+        {{ lh.bank | replace(" | ", "<br>") | safe }}<br><br>
+        <b>Declaration</b><br>
+        We declare that this invoice shows the actual price of the goods described and that all
+        particulars are true and correct. Interest @ 18% p.a. will be charged on overdue bills.
+      </td>
+      <td class="tiny" style="text-align:right">
+        for <b>{{ lh.name }}</b>
+        <div style="height:17mm"></div>
+        Authorised Signatory
+      </td>
+    </tr>
+  </table>
+  <div class="c tiny" style="margin-top:2mm">This is a Computer Generated Invoice &nbsp;|&nbsp; SUBJECT TO MUMBAI JURISDICTION</div>
+</div>
+</body>
+</html>

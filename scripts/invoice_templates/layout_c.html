@@ -1,0 +1,92 @@
+<!-- Layout C: plain small-business bill. Typewriter font, black and white, whole rupees. -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Courier New", Courier, monospace; font-size: 11pt; color: #000; }
+  .page { width: 210mm; height: 297mm; padding: 18mm 20mm; }
+  .frame { border: 2px solid #000; padding: 7mm 8mm 8mm; }
+  .shop { text-align: center; }
+  .shop .name { font-size: 20pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+  .shop .small { font-size: 9.5pt; line-height: 1.5; }
+  .kind { text-align: center; margin: 5mm 0; }
+  .kind span { border: 1px solid #000; padding: 1mm 5mm; font-weight: bold; letter-spacing: 2px; }
+  .row { display: flex; justify-content: space-between; margin-top: 3mm; }
+  .to { margin-top: 5mm; line-height: 1.5; }
+  .dots { border-bottom: 1px dotted #000; padding: 0 2mm; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin-top: 7mm; }
+  th, td { border: 1px solid #000; padding: 2.5mm 2.5mm; }
+  th { font-size: 10pt; }
+  td { vertical-align: top; }
+  .num { text-align: right; white-space: nowrap; }
+  .filler td { height: 45mm; }
+  .sum td { font-weight: bold; }
+  .end { display: flex; justify-content: space-between; margin-top: 9mm; font-size: 9.5pt; line-height: 1.6; }
+  .sign { text-align: right; }
+  .sign .hand { font-family: "Snell Roundhand", "Brush Script MT", cursive; font-size: 22pt; color: #1d2f6f; height: 14mm;
+                transform: rotate(-4deg); margin-right: 6mm; }
+</style>
+</head>
+<body>
+<div class="page">
+<div class="frame">
+  <div class="shop">
+    <div class="name">{{ lh.name }}</div>
+    <div class="small">
+      {{ lh.tagline }}<br>
+      {{ lh.address | join(", ") }}<br>
+      Ph: {{ lh.phone }} &nbsp; Email: {{ lh.email }}<br>
+      {% if show_gstin %}<b>GSTIN: {{ lh.gstin }}</b>{% endif %}
+    </div>
+  </div>
+
+  <div class="kind"><span>TAX INVOICE</span></div>
+
+  <div class="row">
+    <div>Ref: <span class="dots">{{ invoice_number }}</span></div>
+    <div>Dated: <span class="dots">{{ date }}</span></div>
+  </div>
+
+  <div class="to">
+    M/s <span class="dots">{{ buyer.name }}</span><br>
+    {{ buyer.address | join(", ") }}<br>
+    Party GSTIN: {{ buyer.gstin }}
+    {% if po_reference %}<br>Against your order: <span class="dots">{{ po_reference }}</span>{% endif %}
+  </div>
+
+  <table>
+    <tr>
+      <th style="width:14mm">S.No</th><th>Particulars</th><th style="width:24mm">Qty</th>
+      <th style="width:24mm">Rate</th><th style="width:32mm">Amount Rs.</th>
+    </tr>
+    {% for line in lines %}
+    <tr>
+      <td class="num">{{ line.n }}.</td><td>{{ line.description }}</td><td class="num">{{ line.quantity }} nos</td>
+      <td class="num">{{ line.rate }}</td><td class="num">{{ line.amount }}</td>
+    </tr>
+    {% endfor %}
+    <tr class="filler"><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr class="sum"><td colspan="4" class="num">Sub Total</td><td class="num">{{ subtotal }}</td></tr>
+    <tr class="sum"><td colspan="4" class="num">GST @ {{ rate }}%</td><td class="num">{{ tax }}</td></tr>
+    <tr class="sum"><td colspan="4" class="num">TOTAL Rs.</td><td class="num" id="total-value">{{ total }}</td></tr>
+  </table>
+
+  <div class="end">
+    <div>
+      Bank: {{ lh.bank | replace(" | ", "<br>") | safe }}<br><br>
+      E. &amp; O.E. &nbsp; Payment within 15 days.<br>
+      Goods once sold will not be taken back.
+    </div>
+    <div class="sign">
+      For {{ lh.name }}
+      <div class="hand">{{ lh.name.split(" ")[0] }}</div>
+      Proprietor / Auth. Signatory
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>
