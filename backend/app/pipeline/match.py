@@ -16,7 +16,16 @@ from rapidfuzz import fuzz, utils
 
 from app.models import PurchaseOrder, Vendor
 from app.money import format_inr
-from app.pipeline.findings import Finding, failed, passed, plural, skipped, warned
+from app.pipeline.findings import (
+    Finding,
+    failed,
+    join_and,
+    passed,
+    plural,
+    show_date,
+    skipped,
+    warned,
+)
 from app.pipeline.record import Books, InvoiceRecord
 from app.pipeline.validate import ValidateResult
 from app.rules_config import MatchConfig
@@ -41,6 +50,7 @@ class POCandidate(BaseModel):
     description_similarity: float
     date_ok: bool
     strong: bool
+    evidence: list[str]  # the three points above as plain-English clauses
 
 
 class EarlierInvoice(BaseModel):
@@ -139,8 +149,9 @@ def _match_vendor(record: InvoiceRecord, books: Books,
         if vendor:
             how = "tax_id"
             findings.append(passed("VENDOR_MATCH", STAGE,
-                                   f"Vendor confirmed as {vendor.name} ({vendor.id}): the GSTIN "
-                                   f"{printed_tax_id} matches the vendor master.",
+                                   f"Vendor confirmed as {vendor.name} ({vendor.id}) by tax "
+                                   f"ID: the GSTIN {printed_tax_id} on the invoice matches the "
+                                   "vendor master.",
                                    vendor_id=vendor.id, how=how))
 
     # 2. Exact name once punctuation and company suffixes are removed.
@@ -150,9 +161,10 @@ def _match_vendor(record: InvoiceRecord, books: Books,
         if vendor:
             how = "name"
             findings.append(passed("VENDOR_MATCH", STAGE,
-                                   f"Vendor confirmed as {vendor.name} ({vendor.id}): the name "
-                                   f"'{record.vendor_name}' matches once company suffixes are "
-                                   "removed.", vendor_id=vendor.id, how=how))
+                                   f"Vendor confirmed as {vendor.name} ({vendor.id}) by name: "
+                                   f"'{record.vendor_name}' is the same name once company "
+                                   "suffixes such as Pvt Ltd are set aside.",
+                                   vendor_id=vendor.id, how=how))
             if printed_tax_id:
                 findings.append(failed(
                     "VENDOR_TAX_ID_CONFLICT", STAGE,
@@ -215,8 +227,8 @@ def _match_po(
         if vendor is not None and po.vendor_id == vendor.id:
             return po, "explicit_verified", [], [passed(
                 "PO_MATCH", STAGE,
-                f"The invoice quotes '{record.po_reference}': {po.id} exists and belongs to "
-                f"{vendor.name}.", po_id=po.id)]
+                f"Purchase order confirmed as {po.id}: it is quoted on the invoice "
+                f"('{record.po_reference}') and belongs to {vendor.name}.", po_id=po.id)]
         owner_name = next((v.name for v in books.vendors if v.id == po.vendor_id), po.vendor_id)
         invoice_vendor = vendor.name if vendor else "a vendor that is not in the vendor master"
         return po, "explicit_conflict", [], [failed(
@@ -241,18 +253,18 @@ def _match_po(
         po = next(p for p in books.purchase_orders if p.id == strong[0].po_id)
         return po, "implied_single", candidates, [warned(
             "PO_IMPLIED", STAGE,
-            f"No purchase order is quoted on the invoice. {po.id} is the only strong candidate "
-            f"among the open purchase orders of {vendor.name} (score {strong[0].score:g} of "
-            "100). "
-            "A person must confirm it.",
-            severity="review", owner="ap", suggested_po_id=po.id, score=strong[0].score)]
+            f"No purchase order is quoted on the invoice. {po.id} is the only open purchase "
+            f"order of {vendor.name} that fits: {join_and(strong[0].evidence)}. A person must "
+            "confirm it.",
+            severity="review", owner="ap", suggested_po_id=po.id, score=round(strong[0].score))]
     if len(strong) > 1:
-        shortlist = ", ".join(f"{c.po_id} (score {c.score:g})" for c in strong)
+        options = " ".join(f"{c.po_id}: {join_and(c.evidence)}." for c in strong)
         return None, "implied_multiple", candidates, [warned(
             "PO_IMPLIED", STAGE,
             f"No purchase order is quoted on the invoice and {len(strong)} open purchase orders "
-            f"of {vendor.name} fit: {shortlist}. A person must choose.",
-            severity="review", owner="ap", shortlist=[c.po_id for c in strong])]
+            f"of {vendor.name} fit. {options} A person must choose.",
+            severity="review", owner="ap", shortlist=[c.po_id for c in strong],
+            scores={c.po_id: round(c.score) for c in strong})]
     return None, "none", candidates, [failed(
         "PO_NOT_IDENTIFIED", STAGE,
         f"No purchase order is quoted on the invoice and none of the open purchase orders of "
@@ -262,14 +274,43 @@ def _match_po(
 
 def _score_candidate(record: InvoiceRecord, validated: ValidateResult, po: PurchaseOrder,
                      books: Books, rules: MatchConfig) -> POCandidate:
-    amount_fits = (validated.pretax_amount is not None
-                   and validated.pretax_amount <= po.remaining)
-    similarity = max(
-        (_similarity(line.description, po_line.description)
-         for line in record.line_items if line.description
-         for po_line in books.lines_of(po.id)),
-        default=0.0)
-    date_ok = validated.invoice_date is not None and validated.invoice_date >= po.po_date
+    """Score one open purchase order out of 100 and say in words what the score rests on."""
+    pretax = validated.pretax_amount
+    invoice_date = validated.invoice_date
+
+    # 1. Does the invoice amount fit what is left on the purchase order?
+    amount_fits = pretax is not None and pretax <= po.remaining
+    if pretax is None:
+        amount_clause = "the invoice amount before tax is not known"
+    else:
+        verb = "fits" if amount_fits else "is more than"
+        amount_clause = (f"the invoice amount of {format_inr(pretax)} before tax {verb} its "
+                         f"remaining balance of {format_inr(po.remaining)}")
+
+    # 2. Which invoice lines look like a line on the purchase order?
+    po_lines = books.lines_of(po.id)
+    similarity = 0.0
+    matched_items = []
+    for line in record.line_items:
+        if not line.description or not po_lines:
+            continue
+        best = max(po_lines, key=lambda po_line: _similarity(line.description,
+                                                             po_line.description))
+        line_similarity = _similarity(line.description, best.description)
+        similarity = max(similarity, line_similarity)
+        if line_similarity >= rules.line_match_min_score:
+            matched_items.append(f"'{line.description}' matches its line '{best.description}'")
+    items_clause = (join_and(matched_items) if matched_items
+                    else "no invoice line closely matches its lines")
+
+    # 3. Is the invoice dated on or after the purchase order?
+    date_ok = invoice_date is not None and invoice_date >= po.po_date
+    if invoice_date is None:
+        date_clause = "the invoice date is not known"
+    else:
+        order = "on or after" if date_ok else "before"
+        date_clause = (f"the invoice date ({show_date(invoice_date)}) is {order} the purchase "
+                       f"order date ({show_date(po.po_date)})")
 
     score = (rules.implied_po_points_amount_fits * amount_fits
              + rules.implied_po_points_description * similarity / 100
@@ -277,7 +318,8 @@ def _score_candidate(record: InvoiceRecord, validated: ValidateResult, po: Purch
     score = round(score, 1)
     return POCandidate(po_id=po.id, score=score, amount_fits=amount_fits,
                        description_similarity=round(similarity, 1), date_ok=date_ok,
-                       strong=score >= rules.implied_po_strong_score)
+                       strong=score >= rules.implied_po_strong_score,
+                       evidence=[amount_clause, items_clause, date_clause])
 
 
 def _summarise_po(po: PurchaseOrder, books: Books) -> POSummary:
@@ -295,6 +337,15 @@ def _summarise_po(po: PurchaseOrder, books: Books) -> POSummary:
 def _similarity(a: str, b: str) -> float:
     """0 to 100. Ignores case, punctuation and word order."""
     return fuzz.token_set_ratio(a, b, processor=utils.default_process)
+
+
+def describe_line(record: InvoiceRecord, invoice_line: int) -> str:
+    """An invoice line for a sentence: 'Freight' (₹1,200 before tax)."""
+    line = record.line_items[invoice_line - 1]
+    if line.amount is None:
+        return f"'{line.description}'"
+    tax = "including tax" if record.amounts_tax_inclusive else "before tax"
+    return f"'{line.description}' ({format_inr(line.amount)} {tax})"
 
 
 def _match_lines(record: InvoiceRecord, po: PurchaseOrder, books: Books,
@@ -319,11 +370,7 @@ def _match_lines(record: InvoiceRecord, po: PurchaseOrder, books: Books,
 
     unpaired = [pair for pair in pairs if pair.po_line_no is None]
     if unpaired:
-        amounts = {number: line.amount for number, line in enumerate(record.line_items, start=1)}
-        listed = "; ".join(
-            f"'{pair.description}'" + (f" ({format_inr(amounts[pair.invoice_line])})"
-                                       if amounts[pair.invoice_line] is not None else "")
-            for pair in unpaired)
+        listed = join_and([describe_line(record, pair.invoice_line) for pair in unpaired])
         return pairs, warned("LINE_NOT_ON_PO", STAGE,
                              f"{plural(len(unpaired), 'invoice line')} "
                              f"{'is' if len(unpaired) == 1 else 'are'} not on {po.id}: "

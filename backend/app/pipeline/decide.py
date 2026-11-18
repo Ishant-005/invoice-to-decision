@@ -5,14 +5,15 @@ means REVIEW, otherwise APPROVE. All wording comes from the templates below and 
 findings' own messages. No AI model writes any of it.
 """
 
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel
 
 from app.money import format_inr
-from app.pipeline.findings import Owner
+from app.pipeline.findings import Finding, Owner
 from app.pipeline.match import MatchResult
-from app.pipeline.rules import RulesResult
+from app.pipeline.rules import RulesResult, po_position
 from app.pipeline.validate import ValidateResult
 
 DecisionType = Literal["APPROVE", "REVIEW", "REJECT"]
@@ -94,6 +95,24 @@ TEMPLATES: dict[str, tuple[str, str]] = {
 FALLBACK_TEMPLATE = ("a check did not pass", "Review the findings listed.")
 
 
+def _po_balance_headline(finding: Finding) -> str:
+    overage = format_inr(Decimal(finding.data["overage"]))
+    return f"the invoice takes {finding.data['po_id']} over its value by {overage} before tax"
+
+
+def _po_implied_headline(finding: Finding) -> str:
+    if "suggested_po_id" in finding.data:
+        return (f"the invoice quotes no purchase order; {finding.data['suggested_po_id']} is "
+                "suggested")
+    shortlist = ", ".join(finding.data["shortlist"])
+    return f"the invoice quotes no purchase order; it could be any of {shortlist}"
+
+
+# Headlines that quote a figure or a PO number from the finding's data. These replace the
+# fixed phrase in TEMPLATES for that code.
+HEADLINES_WITH_FIGURES = {"PO_BALANCE": _po_balance_headline, "PO_IMPLIED": _po_implied_headline}
+
+
 class Reason(BaseModel):
     code: str
     text: str  # the finding's message, with the real numbers
@@ -135,6 +154,8 @@ def decide(validated: ValidateResult, matched: MatchResult, ruled: RulesResult) 
         main = blocking[0]  # the first, most serious problem leads
         owner = main.owner
         phrase, next_action = TEMPLATES.get(main.code, FALLBACK_TEMPLATE)
+        if main.code in HEADLINES_WITH_FIGURES:
+            phrase = HEADLINES_WITH_FIGURES[main.code](main)
         prefix = "Rejected" if decision == "REJECT" else "Needs review"
         others = len([f for f in flagged if f.severity != "info"]) - 1  # other problems
         more = f" (and {others} more issue{'s' if others > 1 else ''})" if others else ""
@@ -154,13 +175,13 @@ def _approval_text(validated: ValidateResult, matched: MatchResult, notes: int) 
     pretax = validated.pretax_amount
     if po is None or pretax is None:  # cannot happen for an approval; kept for type safety
         return "Approved.", "Schedule the invoice for payment."
-    amount = format_inr(pretax)
     if notes:
         headline = (f"Approved with {notes} note{'s' if notes > 1 else ''}: the invoice matches "
                     f"{po.po_id}; nothing found needs a person.")
     else:
         headline = f"Approved: the invoice matches {po.po_id} and every check passed."
-    payable = f" of {format_inr(validated.gross_amount)}" if validated.gross_amount else ""
-    next_action = (f"Schedule payment{payable}. {po.po_id} billed-to-date rises by {amount} to "
-                   f"{format_inr(po.billed_to_date + pretax)}.")
+    payable = (f" of {format_inr(validated.gross_amount)} including tax"
+               if validated.gross_amount else "")
+    position = po_position(po.po_id, po.value, po.billed_to_date + pretax, now=True)
+    next_action = f"Schedule payment{payable}. {position}."
     return headline, next_action

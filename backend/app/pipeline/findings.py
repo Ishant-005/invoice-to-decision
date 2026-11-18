@@ -7,6 +7,7 @@ The two are separate on purpose. A small PO overage is a `warn` that still lets 
 approved (severity info); a suggested PO is a `warn` that needs a person (severity review).
 """
 
+from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -47,6 +48,18 @@ def failed(code: str, stage: Stage, message: str, severity: Severity, owner: Own
 def plural(count: int, noun: str) -> str:
     """'1 line', '2 lines'."""
     return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
+
+
+def show_date(value: date) -> str:
+    """'8 Nov 2026'."""
+    return f"{value.day} {value:%b %Y}"
+
+
+def join_and(items: list[str]) -> str:
+    """'a', 'a and b', 'a, b and c'."""
+    if len(items) <= 1:
+        return "".join(items)
+    return ", ".join(items[:-1]) + " and " + items[-1]
 
 
 def skipped(code: str, stage: Stage, reason: str) -> Finding:

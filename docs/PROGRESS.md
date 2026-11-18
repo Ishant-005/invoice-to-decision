@@ -62,6 +62,7 @@ web app yet, because the stages are not wired into it until Milestone 4.
 | Decide: worst severity wins, reasons ordered, owner, next action, what passed | tested | `tests/unit/test_decide.py` |
 | Answer key: all 13 cases reach the expected decision, owner, vendor, PO, match type, pre-tax amount and finding codes | tested + verified | `tests/test_answer_key.py` (13 passed); `make decisions` output read |
 | Answer key: the 3 sequences | tested | `tests/test_answer_key.py` (3 passed) |
+| Decision wording: "what passed" list, before/including tax labels, PO position, single overage limit, "would fit without" sentence, duplicate sentences, implied-PO evidence | tested | Exact-sentence assertions in `tests/unit/` (including the case where removing the unlisted line does not make the invoice fit) |
 | Decision wording for the 13 cases | verified | `make decisions CASES="..."` read by the implementer. Wording for situations outside the 13 cases (blocked vendor, closed PO, several candidate POs and so on) is covered by tests for its codes but has not been read through |
 
 Not done in this milestone, by design: nothing writes a decision to the database or updates a

@@ -10,7 +10,15 @@ from decimal import ROUND_HALF_UP, Decimal
 from pydantic import BaseModel
 
 from app.money import format_inr, plain_number
-from app.pipeline.findings import Finding, failed, passed, plural, skipped, warned
+from app.pipeline.findings import (
+    Finding,
+    failed,
+    passed,
+    plural,
+    show_date,
+    skipped,
+    warned,
+)
 from app.pipeline.record import InvoiceRecord
 from app.rules_config import ValidateConfig
 
@@ -110,20 +118,23 @@ def _check_totals(record: InvoiceRecord, rules: ValidateConfig) -> Finding:
         line_sum = sum(amounts, Decimal(0))
         if abs(line_sum - record.subtotal) > rules.rounding_tolerance_rupees:
             problems.append(f"The lines add up to {format_inr(line_sum)}, but the invoice "
-                            f"states a subtotal of {format_inr(record.subtotal)}.")
+                            f"states a subtotal of {format_inr(record.subtotal)} (both before "
+                            "tax).")
         else:
-            confirmed.append(f"The lines add up to the subtotal of {format_inr(record.subtotal)}.")
+            confirmed.append(f"the lines sum to the subtotal of {format_inr(record.subtotal)} "
+                             "before tax")
     else:
         not_checked.append("lines against subtotal")
 
     if record.subtotal is not None and record.tax_amount is not None and record.total is not None:
         computed = record.subtotal + record.tax_amount
-        sentence = (f"Subtotal {format_inr(record.subtotal)} + tax "
-                    f"{format_inr(record.tax_amount)} = {format_inr(computed)}")
+        sums = (f"{format_inr(record.subtotal)} + tax {format_inr(record.tax_amount)} = "
+                f"{format_inr(computed)}")
         if abs(computed - record.total) > rules.rounding_tolerance_rupees:
-            problems.append(f"{sentence}, but the invoice states {format_inr(record.total)}.")
+            problems.append(f"Subtotal {sums}, but the invoice states a total of "
+                            f"{format_inr(record.total)} including tax.")
         else:
-            confirmed.append(f"{sentence}, as stated.")
+            confirmed.append(f"subtotal {sums} including tax, as printed")
     else:
         not_checked.append("subtotal + tax against total")
 
@@ -134,7 +145,7 @@ def _check_totals(record: InvoiceRecord, rules: ValidateConfig) -> Finding:
     if not confirmed:
         return skipped("TOTALS", STAGE,
                        "the invoice does not print a subtotal, tax and total to add up.")
-    message = " ".join(confirmed)
+    message = "The invoice's figures add up: " + "; ".join(confirmed) + "."
     if not_checked:
         message += f" (Could not check: {', '.join(not_checked)}.)"
     return passed("TOTALS", STAGE, message, **data)
@@ -148,7 +159,7 @@ def _check_date(record: InvoiceRecord, parsed: date | None, today: date,
         return failed("DATE_SANITY", STAGE,
                       f"The invoice date '{record.invoice_date}' is not a valid date.",
                       severity="review", owner="vendor")
-    shown = _show_date(parsed)
+    shown = show_date(parsed)
     if parsed > today:
         return failed("DATE_SANITY", STAGE, f"The invoice is dated {shown}, which is in the future.",
                       severity="review", owner="vendor", invoice_date=parsed.isoformat())
@@ -207,7 +218,7 @@ def _normalise_tax(record: InvoiceRecord) -> tuple[Decimal | None, str, Finding]
     if record.subtotal is not None:
         return record.subtotal, "printed_subtotal", passed(
             "PRETAX_AMOUNT", STAGE,
-            f"Pre-tax amount is the printed subtotal, {format_inr(record.subtotal)}.",
+            f"The amount before tax is the printed subtotal, {format_inr(record.subtotal)}.",
             pretax_amount=str(record.subtotal))
 
     if (record.total is not None and record.amounts_tax_inclusive
@@ -216,25 +227,21 @@ def _normalise_tax(record: InvoiceRecord) -> tuple[Decimal | None, str, Finding]
         pretax = (record.total / divisor).quantize(PAISA, rounding=ROUND_HALF_UP)
         return pretax, "derived_from_inclusive_total", passed(
             "PRETAX_AMOUNT", STAGE,
-            f"Only a tax-inclusive total is printed: {format_inr(record.total)} ÷ "
-            f"{plain_number(divisor)} = {format_inr(pretax)} before tax "
-            f"(GST {plain_number(record.tax_rate_percent)}%).",
+            f"Only a total including tax is printed: {format_inr(record.total)} including "
+            f"{plain_number(record.tax_rate_percent)}% GST ÷ {plain_number(divisor)} = "
+            f"{format_inr(pretax)} before tax.",
             pretax_amount=str(pretax))
 
     if record.total is not None and record.tax_amount is not None:
         pretax = record.total - record.tax_amount
         return pretax, "total_minus_tax", passed(
             "PRETAX_AMOUNT", STAGE,
-            f"No subtotal is printed: total {format_inr(record.total)} − tax "
+            f"No subtotal is printed: total {format_inr(record.total)} including tax − tax "
             f"{format_inr(record.tax_amount)} = {format_inr(pretax)} before tax.",
             pretax_amount=str(pretax))
 
     return None, "unresolved", failed(
         "TAX_UNRESOLVED", STAGE,
-        "The pre-tax amount cannot be worked out: the invoice prints no subtotal, and no "
+        "The amount before tax cannot be worked out: the invoice prints no subtotal, and no "
         "total with a tax amount or a tax-inclusive rate.",
         severity="review", owner="ap")
-
-
-def _show_date(value: date) -> str:
-    return f"{value.day} {value:%b %Y}"

@@ -5,7 +5,13 @@ from decimal import Decimal
 
 import pytest
 
-from app.pipeline.rules import is_number_extension, normalise_invoice_number
+from app.pipeline.rules import (
+    is_number_extension,
+    normalise_invoice_number,
+    overage_limit,
+    po_position,
+)
+from app.rules_config import default_rules
 from tests.unit.builders import (
     FILE_HASH,
     earlier_invoice,
@@ -54,11 +60,118 @@ def test_po_balance_beyond_tolerance_is_owned_by_procurement():
     result = run(books=books)
     found = finding(result, "PO_BALANCE")
     assert found.owner == "procurement"
+    # The limit is one figure: the lower of 2% of ₹1,00,000 (₹2,000) and ₹5,000.
     assert found.message == (
-        "PO-100 is worth ₹1,00,000 and ₹95,000 is already billed. This invoice (₹10,000 before "
-        "tax) takes it to ₹1,05,000, which is ₹5,000 (5%) over. That is beyond the allowed "
-        "tolerance of 2% and ₹5,000.")
+        "This invoice is ₹10,000 before tax, but PO-100 has only ₹5,000 remaining of its "
+        "₹1,00,000 value before tax, so the invoice takes it ₹5,000 over. The most this "
+        "purchase order may be exceeded by is ₹2,000.")
     assert result.decision.decision == "REVIEW"
+    assert result.decision.headline == ("Needs review: the invoice takes PO-100 over its value "
+                                        "by ₹5,000 before tax.")
+
+
+@pytest.mark.parametrize(("po_value", "limit"), [
+    ("100000", "2000"),     # 2% is the lower limit
+    ("250000", "5000"),     # 2% is exactly ₹5,000
+    ("300000", "5000"),     # ₹5,000 is the lower limit
+    ("72800", "1456"),      # 2% of an uneven value
+])
+def test_overage_limit_is_the_lower_of_the_two_limits(po_value, limit):
+    assert overage_limit(Decimal(po_value), default_rules().rules) == Decimal(limit)
+
+
+def test_overage_within_tolerance_message_states_the_single_limit():
+    books = make_books(purchase_orders=[make_po(value="100000", billed="91000")])
+    found = finding(run(books=books), "PO_BALANCE")
+    assert found.message == (
+        "This invoice is ₹10,000 before tax, but PO-100 has only ₹9,000 remaining of its "
+        "₹1,00,000 value before tax, so the invoice takes it ₹1,000 over. That is within the "
+        "₹2,000 by which this purchase order may be exceeded.")
+
+
+def test_po_balance_pass_message_gives_the_po_position():
+    found = finding(run(), "PO_BALANCE")
+    assert found.message == (
+        "Fits the purchase order balance: this invoice is ₹10,000 before tax and PO-100 has "
+        "₹1,00,000 remaining. With this invoice, PO-100 would have ₹10,000 of ₹1,00,000 billed "
+        "before tax, ₹90,000 remaining.")
+
+
+@pytest.mark.parametrize(("billed", "now", "expected"), [
+    ("180000", True, "PO-1 is now fully billed: ₹1,80,000 of ₹1,80,000 before tax"),
+    ("100000", True, "PO-1 now has ₹1,00,000 of ₹1,80,000 billed before tax, ₹80,000 remaining"),
+    ("181200", True, ("PO-1 now has ₹1,81,200 billed against a value of ₹1,80,000 before tax, "
+                     "₹1,200 over")),
+    ("180000", False, "PO-1 would be fully billed: ₹1,80,000 of ₹1,80,000 before tax"),
+    ("100000", False, ("PO-1 would have ₹1,00,000 of ₹1,80,000 billed before tax, ₹80,000 "
+                      "remaining")),
+])
+def test_po_position(billed, now, expected):
+    assert po_position("PO-1", Decimal(180000), Decimal(billed), now=now) == expected
+
+
+# --- An overage together with lines that are not on the purchase order -----------------------
+
+
+def with_extra_line(extra_amount: str):
+    """10 widgets (₹10,000, on the PO) plus one 'Site survey' line that is not on the PO."""
+    subtotal = Decimal(10000) + Decimal(extra_amount)
+    lines = [{"description": "Steel widget", "quantity": "10", "unit_price": "1000",
+              "amount": "10000"},
+             {"description": "Site survey", "quantity": "1", "unit_price": extra_amount,
+              "amount": extra_amount}]
+    return make_record(line_items=lines, subtotal=str(subtotal),
+                       tax_amount=str(subtotal * Decimal("0.18")),
+                       total=str(subtotal * Decimal("1.18")))
+
+
+def test_overage_caused_by_an_unlisted_line_says_the_invoice_would_fit_without_it():
+    # ₹12,000 is left on the PO. The widgets (₹10,000) fit; the ₹8,000 survey does not.
+    books = make_books(purchase_orders=[make_po(value="100000", billed="88000")])
+    result = run(with_extra_line("8000"), books)
+    found = finding(result, "PO_BALANCE")
+    assert found.status == "fail"
+    assert found.data["fits_without_unlisted_lines"] is True
+    assert found.message == (
+        "This invoice is ₹18,000 before tax, but PO-100 has only ₹12,000 remaining of its "
+        "₹1,00,000 value before tax, so the invoice takes it ₹6,000 over. The most this "
+        "purchase order may be exceeded by is ₹2,000. Without 'Site survey' (₹8,000 before "
+        "tax), which is not on PO-100, the invoice would be ₹10,000 before tax and would fit.")
+    assert result.decision.headline == ("Needs review: the invoice takes PO-100 over its value "
+                                        "by ₹6,000 before tax.")
+
+
+def test_overage_that_remains_without_the_unlisted_line_does_not_say_it_would_fit():
+    # Only ₹4,000 is left on the PO, so even the widgets alone (₹10,000) do not fit.
+    books = make_books(purchase_orders=[make_po(value="100000", billed="96000")])
+    found = finding(run(with_extra_line("8000"), books), "PO_BALANCE")
+    assert found.status == "fail"
+    assert found.data["fits_without_unlisted_lines"] is False
+    assert "Without" not in found.message
+    assert "would fit" not in found.message
+    assert found.message == (
+        "This invoice is ₹18,000 before tax, but PO-100 has only ₹4,000 remaining of its "
+        "₹1,00,000 value before tax, so the invoice takes it ₹14,000 over. The most this "
+        "purchase order may be exceeded by is ₹2,000.")
+
+
+def test_two_unlisted_lines_are_both_named():
+    lines = [{"description": "Steel widget", "amount": "10000"},
+             {"description": "Site survey", "amount": "3000"},
+             {"description": "Courier", "amount": "500"}]
+    record = make_record(line_items=lines, subtotal="13500", tax_amount="2430", total="15930")
+    books = make_books(purchase_orders=[make_po(value="100000", billed="90000")])
+    found = finding(run(record, books), "PO_BALANCE")
+    assert found.message.endswith(
+        "Without 'Site survey' (₹3,000 before tax) and 'Courier' (₹500 before tax), which are "
+        "not on PO-100, the invoice would be ₹10,000 before tax and would fit.")
+
+
+def test_an_overage_with_every_line_on_the_po_has_no_without_sentence():
+    books = make_books(purchase_orders=[make_po(value="100000", billed="95000")])
+    found = finding(run(books=books), "PO_BALANCE")
+    assert "fits_without_unlisted_lines" not in found.data
+    assert "Without" not in found.message
 
 
 def test_overage_within_tolerance_still_approves():
@@ -109,8 +222,9 @@ def test_price_variance_boundaries(unit_price, status):
 
 def test_price_variance_message_quotes_both_prices():
     found = finding(run(priced_at("1080")), "PRICE_VARIANCE")
-    assert found.message == ("'Steel widget' is billed at ₹1,080 per unit; the purchase order "
-                             "price is ₹1,000 (8% above). The allowed difference is 2%.")
+    assert found.message == ("'Steel widget' is billed at ₹1,080 per unit before tax; the "
+                             "purchase order price is ₹1,000 (8% above). The allowed "
+                             "difference is 2%.")
 
 
 def test_price_check_is_skipped_when_no_unit_price_is_printed():
@@ -170,12 +284,33 @@ def test_same_total_and_same_date_is_a_probable_duplicate():
     assert (found.status, found.severity, found.owner) == ("fail", "review", "ap")
     assert result.ruled.duplicates[0].kind == "probable"
     assert result.decision.decision == "REVIEW"
+    assert found.data["amount_at_risk"] == "11800"
+    assert found.message == (
+        "This looks like the same bill as invoice XYZ-9 from Acme Packaging Pvt Ltd, which is "
+        "already approved. Both have the same total (₹11,800 including tax) and the same "
+        "invoice date (10 Nov 2026). If both are paid, ₹11,800 including tax would be paid "
+        "twice.")
 
 
 def test_same_total_and_a_lightly_altered_number_is_a_probable_duplicate():
     result = duplicates_against(earlier_invoice(number="INV-500"), invoice_number="INV-500-A")
     assert finding(result, "DUPLICATE_EXACT").status == "pass"
-    assert finding(result, "DUPLICATE_PROBABLE").status == "fail"
+    assert finding(result, "DUPLICATE_PROBABLE").message == (
+        "This looks like the same bill as invoice INV-500 from Acme Packaging Pvt Ltd, which is "
+        "already approved. Both have the same total (₹11,800 including tax) and nearly the same "
+        "invoice number ('INV-500-A' against 'INV-500'). If both are paid, ₹11,800 including "
+        "tax would be paid twice.")
+
+
+def test_probable_duplicate_of_an_invoice_awaiting_review_says_so():
+    result = duplicates_against(earlier_invoice(number="INV-500", state="awaiting_review",
+                                                invoice_date=date(2026, 11, 10)),
+                                invoice_number="INV-500-A")
+    assert finding(result, "DUPLICATE_PROBABLE").message == (
+        "This looks like the same bill as invoice INV-500 from Acme Packaging Pvt Ltd, which is "
+        "awaiting review. Both have the same total (₹11,800 including tax), the same invoice "
+        "date (10 Nov 2026) and nearly the same invoice number ('INV-500-A' against 'INV-500'). "
+        "If both are paid, ₹11,800 including tax would be paid twice.")
 
 
 def test_monthly_invoice_same_amount_different_date_and_number_is_not_a_duplicate():

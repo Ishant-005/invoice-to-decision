@@ -12,9 +12,58 @@ def test_no_problems_means_approve_with_no_owner():
     assert decision.owner == "none"
     assert decision.reasons == []
     assert decision.headline == "Approved: the invoice matches PO-100 and every check passed."
-    assert decision.next_action == ("Schedule payment of ₹11,800. PO-100 billed-to-date rises "
-                                    "by ₹10,000 to ₹10,000.")
-    assert len(decision.passed) > 10
+    assert decision.next_action == ("Schedule payment of ₹11,800 including tax. PO-100 now has "
+                                    "₹10,000 of ₹1,00,000 billed before tax, ₹90,000 remaining.")
+
+
+def test_an_approval_lists_what_passed_in_plain_english():
+    assert run().decision.passed == [
+        "The document is an invoice.",
+        "Invoice number, vendor name, invoice date and total are all present.",
+        "Quantity × unit price equals the amount on every line checked (1 line).",
+        ("The invoice's figures add up: the lines sum to the subtotal of ₹10,000 before tax; "
+        "subtotal ₹10,000 + tax ₹1,800 = ₹11,800 including tax, as printed."),
+        "The invoice date 10 Nov 2026 is valid and not in the future.",
+        "All amounts are positive and in INR.",
+        "GSTIN 06AAACA0001A1Z1 has the standard 15-character form.",
+        "The amount before tax is the printed subtotal, ₹10,000.",
+        ("Vendor confirmed as Acme Packaging Pvt Ltd (V-1) by tax ID: the GSTIN 06AAACA0001A1Z1 "
+        "on the invoice matches the vendor master."),
+        ("Purchase order confirmed as PO-100: it is quoted on the invoice ('PO-100') and belongs "
+        "to Acme Packaging Pvt Ltd."),
+        "Every invoice line corresponds to a line on PO-100 (1 line).",
+        ("No duplicate found: no earlier invoice is the same file or has the same vendor and "
+        "invoice number."),
+        ("No likely duplicate found: no earlier invoice from this vendor has the same total "
+        "(₹11,800 including tax) together with the same date or a nearly identical number."),
+        "PO-100 is open.",
+        ("Fits the purchase order balance: this invoice is ₹10,000 before tax and PO-100 has "
+        "₹1,00,000 remaining. With this invoice, PO-100 would have ₹10,000 of ₹1,00,000 billed "
+        "before tax, ₹90,000 remaining."),
+        "Unit prices are within 2% of the purchase order price on every matched line (1 line).",
+    ]
+
+
+def test_vendor_confirmed_by_name_is_worded_as_such_in_what_passed():
+    decision = run(make_record(vendor_name="ACME PACKAGING PRIVATE LIMITED",
+                               vendor_tax_id=None)).decision
+    assert ("Vendor confirmed as Acme Packaging Pvt Ltd (V-1) by name: 'ACME PACKAGING PRIVATE "
+            "LIMITED' is the same name once company suffixes such as Pvt Ltd are set aside."
+            ) in decision.passed
+
+
+def test_an_approval_that_uses_up_the_po_says_it_is_fully_billed():
+    books = make_books(purchase_orders=[make_po(value="10000")])
+    assert run(books=books).decision.next_action == (
+        "Schedule payment of ₹11,800 including tax. PO-100 is now fully billed: ₹10,000 of "
+        "₹10,000 before tax.")
+
+
+def test_an_approval_within_tolerance_says_how_far_over_the_po_now_is():
+    books = make_books(purchase_orders=[make_po(value="100000", billed="91000")])
+    assert run(books=books).decision.next_action == (
+        "Schedule payment of ₹11,800 including tax. PO-100 now has ₹1,01,000 billed against a "
+        "value of ₹1,00,000 before tax, ₹1,000 over.")
 
 
 def test_warnings_alone_still_approve_and_are_listed_as_notes():

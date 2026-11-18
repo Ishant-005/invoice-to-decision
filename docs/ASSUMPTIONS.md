@@ -61,3 +61,9 @@ repeated here.
 - The Decide output also carries a "not checked" list (skipped checks and why), besides the reasons and "what passed".
 - Recording an outcome (adding to billed-to-date, adding the invoice to history) belongs to Milestone 4. The answer-key test does it in memory in `tests/answer_key.py` so the three sequences can be tested now.
 - `make decisions` was added so the decision wording can be read without the web app.
+- Wording: every rupee amount is labelled "before tax" or "including tax" where both kinds could appear. Line amounts are labelled "before tax" unless the invoice says its amounts include tax.
+- PO_BALANCE states one limit per PO: the lower of 2% of the PO value and ₹5,000 (PO-2275: ₹3,000; PO-2260: ₹5,000). This is the same test as "within 2% AND within ₹5,000", worded as a single figure.
+- When an invoice goes over the PO and has lines that are not on the PO, PO_BALANCE works out whether the invoice would fit without those lines and says so only when it would. This is done for small (within-limit) overages as well as large ones, and is skipped if an unlisted line has no amount or the amounts include tax.
+- A check describes the PO position as "would have / would be" (nothing is decided yet); the approval's next action says "now has / is now".
+- The PO_IMPLIED message states the three pieces of evidence in words (amount against remaining balance, which lines matched, invoice date against PO date), including any that count against the PO. The score appears only in the finding's data, as a whole number.
+- Headlines for PO_BALANCE and PO_IMPLIED quote the PO number (and the overage) from the finding's data; all other headlines are fixed phrases per finding code.

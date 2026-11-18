@@ -77,7 +77,14 @@ def test_subtotal_plus_tax_allows_one_rupee_of_rounding(total, status):
 def test_totals_failure_quotes_the_real_figures():
     found = finding(check(total="12800"), "TOTALS")
     assert (found.severity, found.owner) == ("review", "vendor")
-    assert found.message == "Subtotal ₹10,000 + tax ₹1,800 = ₹11,800, but the invoice states ₹12,800."
+    assert found.message == ("Subtotal ₹10,000 + tax ₹1,800 = ₹11,800, but the invoice states a "
+                             "total of ₹12,800 including tax.")
+
+
+def test_totals_pass_message_labels_before_and_including_tax():
+    assert finding(check(), "TOTALS").message == (
+        "The invoice's figures add up: the lines sum to the subtotal of ₹10,000 before tax; "
+        "subtotal ₹10,000 + tax ₹1,800 = ₹11,800 including tax, as printed.")
 
 
 def test_lines_must_add_up_to_the_subtotal():
@@ -103,6 +110,9 @@ def test_pretax_is_derived_from_a_tax_inclusive_total():
     assert result.pretax_amount == Decimal("100000.00")
     assert result.gross_amount == Decimal(118000)
     assert result.pretax_source == "derived_from_inclusive_total"
+    assert finding(result, "PRETAX_AMOUNT").message == (
+        "Only a total including tax is printed: ₹1,18,000 including 18% GST ÷ 1.18 = ₹1,00,000 "
+        "before tax.")
     assert finding(result, "TOTALS").status == "skipped"
     assert all(f.severity == "info" for f in result.findings)
 

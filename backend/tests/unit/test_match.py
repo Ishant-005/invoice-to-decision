@@ -130,6 +130,44 @@ def test_one_strong_candidate_is_suggested_but_never_auto_approved():
     assert [f.code for f in result.findings if f.severity != "info"] == ["PO_IMPLIED"]
 
 
+def test_implied_po_message_states_the_evidence_and_not_the_score():
+    found = finding(run(make_record(po_reference=None)), "PO_IMPLIED")
+    assert found.message == (
+        "No purchase order is quoted on the invoice. PO-100 is the only open purchase order of "
+        "Acme Packaging Pvt Ltd that fits: the invoice amount of ₹10,000 before tax fits its "
+        "remaining balance of ₹1,00,000, 'Steel widget' matches its line 'Steel widget' and the "
+        "invoice date (10 Nov 2026) is on or after the purchase order date (1 Oct 2026). "
+        "A person must confirm it.")
+    assert "score" not in found.message
+    assert found.data["score"] == 100 and isinstance(found.data["score"], int)
+
+
+def test_implied_po_score_in_the_data_is_rounded_to_a_whole_number():
+    # 'Widgets in steel, large' is close to 'Steel widget' but not identical, so the raw
+    # score has a fraction (88.2).
+    lines = [{"description": "Widgets in steel, large", "quantity": "10", "unit_price": "1000",
+              "amount": "10000"}]
+    result = run(make_record(po_reference=None, line_items=lines))
+    raw = result.matched.candidates[0].score
+    found = finding(result, "PO_IMPLIED")
+    assert raw == 88.2
+    assert found.data["score"] == 88
+
+
+def test_implied_po_evidence_says_what_does_not_fit_too():
+    # The goods match and the date is fine, but the amount is more than the PO has left.
+    books = make_books(purchase_orders=[make_po(value="100000", billed="95000")])
+    result = run(make_record(po_reference=None), books)
+    assert result.matched.candidates[0].evidence[0] == (
+        "the invoice amount of ₹10,000 before tax is more than its remaining balance of ₹5,000")
+
+
+def test_implied_po_headline_names_the_suggested_po():
+    decision = run(make_record(po_reference=None)).decision
+    assert decision.headline == ("Needs review: the invoice quotes no purchase order; PO-100 "
+                                 "is suggested.")
+
+
 def test_implied_score_is_amount_40_description_40_date_20():
     candidate = run(make_record(po_reference=None)).matched.candidates[0]
     assert (candidate.amount_fits, candidate.description_similarity, candidate.date_ok) == (
@@ -142,7 +180,12 @@ def test_several_strong_candidates_give_a_shortlist():
                        po_lines=[make_line("PO-100"), make_line("PO-101")])
     result = run(make_record(po_reference=None), books)
     assert (result.matched.po_id, result.matched.po_match_type) == (None, "implied_multiple")
-    assert finding(result, "PO_IMPLIED").data["shortlist"] == ["PO-100", "PO-101"]
+    found = finding(result, "PO_IMPLIED")
+    assert found.data["shortlist"] == ["PO-100", "PO-101"]
+    assert found.data["scores"] == {"PO-100": 100, "PO-101": 100}
+    assert "score" not in found.message
+    assert result.decision.headline == ("Needs review: the invoice quotes no purchase order; it "
+                                        "could be any of PO-100, PO-101.")
 
 
 def test_no_strong_candidate_goes_to_procurement():
@@ -176,6 +219,7 @@ def test_a_line_that_is_not_on_the_po_is_a_warning_only():
     found = finding(result, "LINE_NOT_ON_PO")
     assert (found.status, found.severity) == ("warn", "info")
     assert found.data["lines"] == [2]
+    assert found.message == "1 invoice line is not on PO-100: 'Freight' (₹500 before tax)."
     assert result.decision.decision == "APPROVE"
 
 
