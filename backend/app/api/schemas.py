@@ -132,6 +132,18 @@ class POInvoiceOut(BaseModel):
     file_name: str
 
 
+class InvoiceDetail(POInvoiceOut):
+    """One invoice from the history, with what was read from it and its page images. The
+    run view uses this to show an earlier invoice beside a suspected duplicate."""
+
+    id: int
+    vendor_id: str | None
+    vendor_name: str | None
+    po_id: str | None
+    pages: list[str]  # URLs of the page images, in page order
+    record: dict[str, Any] | None  # the stored reading of the PDF, if there is one
+
+
 class PurchaseOrderOut(BaseModel):
     id: str
     vendor_id: str

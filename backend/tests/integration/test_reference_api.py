@@ -95,3 +95,41 @@ def test_stats_count_runs_by_outcome_and_add_up_the_approved_value(api):
         "rejected_by_reviewer": 0, "failed": 0, "in_progress": 0,
         "value_approved_pretax": "375000.00", "value_approved_gross": "442500.00",
         "seeded_invoices": 2}
+
+
+def test_a_sample_preview_is_a_png_and_an_unknown_sample_is_404(api):
+    response = api.client.get("/api/samples/01_acme_clean.pdf/preview.png")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
+    assert response.content.startswith(b"\x89PNG")
+    assert api.client.get("/api/samples/..%2F..%2F.env/preview.png").status_code == 404
+    assert api.client.get("/api/samples/nothing.pdf/preview.png").status_code == 404
+
+
+def test_a_probable_duplicate_links_to_the_earlier_invoice_with_its_reading_and_page(api):
+    run = submit(api, "08_acme_near_duplicate.pdf")
+    rules = next(s for s in run["stages"] if s["stage"] == "rules")
+    link = rules["result"]["duplicates"][0]
+
+    earlier = api.client.get(f"/api/invoices/{link['invoice_id']}").json()
+    assert earlier["invoice_number"] == "INV-1017"
+    assert earlier["is_seeded"] is True
+    assert earlier["vendor_name"] == "Acme Packaging Pvt Ltd"
+    assert earlier["gross_amount"] == "118000.00"  # money stays text
+    assert earlier["record"]["line_items"][0]["description"] == "Shipping carton 18x12x10"
+
+    # The seeded invoice never went through a run; its page is rendered when first asked for.
+    page = api.client.get(earlier["pages"][0])
+    assert page.status_code == 200
+    assert page.content.startswith(b"\x89PNG")
+
+
+def test_an_invoice_from_a_run_can_be_fetched_and_an_unknown_one_is_404(api):
+    run = submit(api, "01_acme_clean.pdf")
+    # The two seeded invoices are numbers 1 and 2, so the first run's invoice is number 3.
+    invoice = api.client.get("/api/invoices/3").json()
+    assert invoice["run_id"] == run["id"]
+    assert invoice["invoice_number"] == "INV-1042"
+    assert api.client.get(invoice["pages"][0]).status_code == 200
+    assert api.client.get("/api/invoices/9999").status_code == 404
+    assert api.client.get("/api/invoices/9999/pages/1.png").status_code == 404

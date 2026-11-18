@@ -5,10 +5,13 @@ from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlmodel import Session, select
 
+from app import config
 from app.api.runs import run_state, vendor_names_by_id
 from app.api.schemas import (
+    InvoiceDetail,
     POInvoiceOut,
     POLineOut,
     PurchaseOrderOut,
@@ -17,9 +20,11 @@ from app.api.schemas import (
     VendorOut,
 )
 from app.db import get_session
-from app.models import Invoice, POLine, PurchaseOrder, Run, Vendor
+from app.models import Invoice, POLine, PurchaseOrder, Run, SavedExtraction, Vendor
+from app.pipeline.receive import ensure_page_images
+from app.pipeline.runner import upload_path
 from app.rules_config import default_rules
-from app.samples import Sample, load_samples
+from app.samples import Sample, load_samples, sample_path
 
 router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -29,6 +34,64 @@ SessionDep = Annotated[Session, Depends(get_session)]
 def list_samples() -> list[Sample]:
     """The 13 sample invoices: what each document is, not what should happen to it."""
     return load_samples()
+
+
+@router.get("/samples/{file_name}/preview.png")
+def get_sample_preview(file_name: str) -> FileResponse:
+    """The first page of a sample invoice as an image, for the gallery."""
+    path = sample_path(file_name)
+    if path is None:
+        raise HTTPException(404, f"There is no sample called '{file_name}'.")
+    file_hash, _ = ensure_page_images(path)
+    return FileResponse(config.PAGES_DIR / file_hash / "1.png", media_type="image/png")
+
+
+# --- Invoice history ---------------------------------------------------------------------
+
+
+def invoice_pdf_path(invoice: Invoice):
+    """Where the PDF of an invoice in the history is kept: the seed folder for seeded
+    history, otherwise the stored upload of the run that produced it."""
+    if invoice.is_seeded:
+        return config.SEED_DIR / invoice.file_name
+    return upload_path(invoice.run_id)
+
+
+def get_invoice_or_404(session: Session, invoice_id: int) -> Invoice:
+    invoice = session.get(Invoice, invoice_id)
+    if invoice is None:
+        raise HTTPException(404, "There is no invoice with that ID.")
+    return invoice
+
+
+@router.get("/invoices/{invoice_id}")
+def get_invoice(invoice_id: int, session: SessionDep) -> InvoiceDetail:
+    """One invoice from the history (seeded or from a run) with the stored reading of its
+    PDF and its page images. Shown beside a suspected duplicate."""
+    invoice = get_invoice_or_404(session, invoice_id)
+    pdf_path = invoice_pdf_path(invoice)
+    page_count = ensure_page_images(pdf_path)[1] if pdf_path.is_file() else 0
+    saved = session.get(SavedExtraction, invoice.file_hash)
+    return InvoiceDetail(
+        id=invoice.id, invoice_number=invoice.invoice_number,
+        invoice_date=invoice.invoice_date, pretax_amount=invoice.pretax_amount,
+        gross_amount=invoice.gross_amount, state=invoice.state, is_seeded=invoice.is_seeded,
+        run_id=invoice.run_id, file_name=invoice.file_name, vendor_id=invoice.vendor_id,
+        vendor_name=(vendor_names_by_id(session).get(invoice.vendor_id)
+                     or invoice.vendor_name_printed),
+        po_id=invoice.po_id,
+        pages=[f"/api/invoices/{invoice.id}/pages/{n}.png" for n in range(1, page_count + 1)],
+        record=saved.record if saved else None)
+
+
+@router.get("/invoices/{invoice_id}/pages/{page_number}.png")
+def get_invoice_page(invoice_id: int, page_number: int, session: SessionDep) -> FileResponse:
+    invoice = get_invoice_or_404(session, invoice_id)
+    # page_number is a whole number (FastAPI checks), so this path cannot leave the folder.
+    path = config.PAGES_DIR / invoice.file_hash / f"{page_number}.png"
+    if not path.is_file():
+        raise HTTPException(404, "There is no such page image.")
+    return FileResponse(path, media_type="image/png")
 
 
 def purchase_order_out(session: Session, po: PurchaseOrder,

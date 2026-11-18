@@ -92,6 +92,22 @@ def render_pages(pdf: pdfium.PdfDocument, folder: Path) -> list[str]:
     return paths
 
 
+def ensure_page_images(pdf_path: Path, pages_dir: Path | None = None) -> tuple[str, int]:
+    """Make sure the page images of a PDF on the server exist, and return its file hash and
+    page count. Used to show documents that never went through a run: the sample gallery
+    and the seeded history. Pages already rendered are left alone."""
+    pdf_bytes = pdf_path.read_bytes()
+    file_hash = hashlib.sha256(pdf_bytes).hexdigest()
+    folder = (pages_dir or config.PAGES_DIR) / file_hash
+    if not (folder / "1.png").is_file():
+        pdf = pdfium.PdfDocument(pdf_bytes)
+        try:
+            render_pages(pdf, folder)
+        finally:
+            pdf.close()
+    return file_hash, len(list(folder.glob("*.png")))
+
+
 def file_seen_before(session: Session, file_hash: str, current_run_id: str | None) -> bool:
     """True if an earlier run, or an invoice in the history, has the same file hash.
 
