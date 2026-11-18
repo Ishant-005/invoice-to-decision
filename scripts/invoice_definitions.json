@@ -190,7 +190,7 @@
       "print": {"scan": true},
       "truth": {
         "document_type": "invoice",
-        "vendor_name": "Sharma Office Supplies",
+        "vendor_name": "SHARMA OFFICE SUPPLIES",
         "vendor_tax_id": "06AAAPS0003S1ZP",
         "invoice_number": "SOS-778",
         "invoice_date": "2026-10-28",
@@ -396,7 +396,7 @@
       "print": {},
       "truth": {
         "document_type": "invoice",
-        "vendor_name": "Sharma Office Supplies",
+        "vendor_name": "SHARMA OFFICE SUPPLIES",
         "vendor_tax_id": "06AAAPS0003S1ZP",
         "invoice_number": "SOS-801",
         "invoice_date": "2026-11-08",
@@ -530,7 +530,7 @@
       "print": {},
       "truth": {
         "document_type": "invoice",
-        "vendor_name": "Quickfix Hardware Co.",
+        "vendor_name": "QUICKFIX HARDWARE CO.",
         "vendor_tax_id": "06AAAFQ0091Q1Z0",
         "invoice_number": "QH-0091",
         "invoice_date": "2026-11-09",
