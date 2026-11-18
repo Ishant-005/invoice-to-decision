@@ -68,11 +68,48 @@ web app yet, because the stages are not wired into it until Milestone 4.
 Not done in this milestone, by design: nothing writes a decision to the database or updates a
 PO balance yet (Milestone 4). The answer-key test applies outcomes in memory to test sequences.
 
+## Milestone 3: Extraction
+
+Results below are from real runs against `claude-sonnet-5-5` on 2026-11-18. The reports are
+written by the scripts, not by hand: `docs/EXTRACTION_EVAL.md` and `docs/E2E_CHECK.md`.
+
+| Feature | Status | Evidence |
+|---|---|---|
+| Receive: PDF only, 10 MB, 5 pages, clear errors | tested | `tests/unit/test_receive.py` (not a PDF, empty, damaged, too large, too many pages) |
+| Receive: SHA-256 hash, page images with pypdfium2 | tested + verified | Test checks the hash and that a PNG is written; a real run wrote `1.png` for case 10 |
+| Receive: notes a file seen before (earlier run or seeded history) | tested + verified | Tests; in `make e2e` the second submission of case 1 was recognised |
+| Extract: live call, PDF in, schema-constrained record out | verified | `make eval`: all 15 PDFs returned a valid record, 3 to 5 seconds each |
+| Extract: prompt keeps the FIXED requirements | tested | `test_the_prompt_keeps_the_fixed_requirements` |
+| Extract: amounts are exact `Decimal`, never float | tested | `tests/unit/test_extract.py` |
+| Extraction accuracy | verified | `make eval`: 294 of 294 values correct. The first run scored 291 of 294; the 3 misses were an answer-key error (vendor name printed in capitals), corrected in the key, not the prompt. Both runs are in the report |
+| Case 10: invoice_number and total come back null | verified | Null in all 5 live readings made today (2 eval runs, the e2e check, 2 manual runs). The model's note names the ink blot and the blank field |
+| Saved extractions keyed by file hash | tested + verified | Tests; real run saved then served the reading |
+| Identical file reuses the saved reading ("reused: identical file") | tested + verified | Tests; `make e2e` sequence `same_file_twice` |
+| Fallback: saved result when the live call fails, clearly labelled | tested + verified | Tests; real runs with an invalid API key and with an unreachable address both returned "served from saved result (live call failed)" plus the reason |
+| No saved result and live call fails: the run fails with a readable message | tested + verified | Same real runs, on a file with nothing saved |
+| `EXTRACTION_CACHE_MODE=off` never uses a saved result | tested + verified | Tests; real run failed as it should |
+| Daily cap `MAX_LIVE_EXTRACTIONS_PER_DAY` | tested + verified | Tests; real run with the cap reached returned the saved result, and a clear error for a file with nothing saved |
+| Retry: 60 s timeout, 2 retries with backoff | implemented | Configured on the SDK client. Not observed: no real timeout or server error was provoked. The unreachable-address run did go through the retries before falling back |
+| `make eval` and `docs/EXTRACTION_EVAL.md` | verified | Run twice; report read |
+| End-to-end: live extraction into the decision logic | verified | `make e2e`: 13 of 13 cases and 3 of 3 sequences match the answer key (`docs/E2E_CHECK.md`) |
+
+API usage for this milestone, from the token counts the API returned: two eval runs
+(US $0.22 each), one end-to-end run (US $0.26) and a handful of single test calls: about
+US $0.75 in total.
+
+Not done in this milestone, by design: nothing calls Receive or Extract over HTTP yet, and no
+run or stage event is written to the database (Milestone 4). Structured logs with the run ID
+also belong there.
+
+Limits to be honest about: 15 synthetic invoices is a small, clean sample, so "294 of 294"
+says the reading works on these layouts, not that it is 100% accurate in general. The model
+has no temperature setting, so a future run could differ; today's separate passes agreed.
+
 ## Known issues
 
 - pytest prints one deprecation warning from Starlette's test client (it suggests the `httpx2`
   package instead of `httpx`). Harmless; tests pass.
 
-## Milestones 3 to 7
+## Milestones 4 to 7
 
 Not started.

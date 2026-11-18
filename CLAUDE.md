@@ -51,11 +51,12 @@ Run from the repo root. Needs Python 3.12, uv, Node and npm.
 | `make invoices` | Regenerate the 15 invoice PDFs, `expected.json` and `seed_invoices.json` from `scripts/invoice_definitions.json` (needs Playwright's Chromium; installs it if missing) |
 | `make check-invoices` | Recompute every invoice figure and check each PDF's text layer (scans must have none) |
 | `make decisions` | Run the answer key's ground-truth extractions through the decision logic and print one line per case; `make decisions CASES="1 5 8"` prints those decisions in full. No AI model, no saved database |
-
-Not built yet (added in a later milestone): `make eval`.
+| `make eval` | **Calls the live API (about US $0.22).** Reads all 15 PDFs with the model, scores every field against the answer key, writes `docs/EXTRACTION_EVAL.md`; `make eval NOTE="what changed"` labels the run in the history table |
+| `make e2e` | **Calls the live API (about US $0.26).** 13 cases and 3 sequences through Receive, Extract and the decision logic, compared with the answer key; writes `docs/E2E_CHECK.md` |
 
 Useful one-offs:
 
+- The Extract stage's tests use a stand-in for the model and need no API key: `cd backend && uv run pytest tests/unit/test_extract.py -q`
 - One backend test: `cd backend && uv run pytest tests/test_health.py -q`
 - The answer-key test only: `cd backend && uv run pytest tests/test_answer_key.py -v`
 - Add a backend dependency: `cd backend && uv add <package>` (dev-only: `uv add --dev <package>`)

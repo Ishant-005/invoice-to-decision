@@ -67,3 +67,25 @@ repeated here.
 - A check describes the PO position as "would have / would be" (nothing is decided yet); the approval's next action says "now has / is now".
 - The PO_IMPLIED message states the three pieces of evidence in words (amount against remaining balance, which lines matched, invoice date against PO date), including any that count against the PO. The score appears only in the finding's data, as a whole number.
 - Headlines for PO_BALANCE and PO_IMPLIED quote the PO number (and the overage) from the finding's data; all other headlines are fixed phrases per finding code.
+
+## Milestone 3
+
+- **Temperature is not set, although the spec says "Temperature 0".** The API rejects the setting for `claude-sonnet-5-5` (tested on 2026-11-18: HTTP 400 "temperature: Extra inputs are not permitted"; the current SDK no longer has the parameter). Repeatability is instead measured: the eval and the end-to-end check are separate live passes over the same PDFs.
+- The model's "effort" is set to `low` (a constant in `extract.py`). Reading a one-page invoice is transcription; at `low` the eval scored 294 of 294 and a reading takes 3 to 5 seconds. Raise it only if an eval shows misses.
+- PDF input: the file is sent as a base64 `document` block before the instruction, as the PDF-support documentation recommends. The API gives the model a picture of each page plus any text layer, so scans and digital PDFs use one path.
+- Structured output: `client.messages.parse()` with a Pydantic model (`ReadInvoice`), the method the structured-outputs documentation recommends. Every field is required but may be null, so the model must state "null" rather than omit a field, and the schema stays inside the documented limits (at most 16 nullable fields; it has 15). A test guards this.
+- The model returns amounts as text made only of digits and a decimal point, which is converted straight to `Decimal`. A reply with a comma or currency sign in an amount is rejected as a failed reading rather than cleaned up.
+- Evidence comes back as five fixed fields; an empty string means "no evidence" and is stored as null.
+- Retries are the SDK's own: 60-second timeout and 2 retries with exponential backoff on timeouts, connection errors, rate limits and server errors. A wrong API key or a bad request is not retried, because retrying cannot fix it.
+- A model refusal or a reply cut off by the token limit counts as a failed reading, never as a record. Anthropic's optional "fall back to another model on refusal" beta is not used: the eval measures one named model, and a failed reading already has a defined path (saved result or a clear error).
+- "Seen before" (Receive) means an earlier run, or an invoice in the history including the seeded ones, has the same file hash. When that is true and a saved reading exists, Extract reuses it without a live call ("reused: identical file"). Any other file is always read live in `fallback` mode, even if a saved reading survives from before a reset.
+- `EXTRACTION_CACHE_MODE=off` means a saved reading is never used: not for an identical file, not after a failed call, not when the daily cap is reached.
+- The daily cap counts live calls attempted (a failed call can still cost money), per UTC day, in a small database table that a reset does not clear. On a host that wipes its disk on restart the count starts again from zero.
+- Any failure of the live call (including a rejected API key) falls back to a saved reading if one exists, and the stage result carries the reason in plain English.
+- Page images are written to `var/pages/<file hash>/<page number>.png` at 144 dpi. Receive checks the file's first bytes (`%PDF-`), not its name.
+- `.env` is loaded with `python-dotenv` in `app/config.py`; variables already set in the environment win, so a hosting service's settings take priority.
+- `pillow` moved from a development dependency to a runtime one, because rendering pages to PNG needs it.
+- Eval scoring: amounts equal as numbers; text equal after trimming spaces, case-sensitive; lines compared in order. `evidence` and `notes` are not scored.
+- The answer key now records vendor names as printed. Layout C prints the name in capitals, so cases 3, 9 and 13 have `SHARMA OFFICE SUPPLIES` and `QUICKFIX HARDWARE CO.` as ground truth. The first eval run showed this as 3 mismatches where the model was right and the key was wrong; the prompt was not changed. Regenerating left all 15 PDFs byte-identical.
+- `make eval` writes what the model returned to `data/eval/latest_extractions.json` and a summary of every run to `data/eval/history.json`; both are committed as evidence. Neither the eval nor `make e2e` touches the app database or the daily cap.
+- `make e2e` was added for the end-to-end check (SPEC 8, item 4). It uses the real Receive and Extract code with an in-memory database, and the same comparison function as the answer-key test.
