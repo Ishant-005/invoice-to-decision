@@ -20,6 +20,7 @@ SEED_DIR = REPO_ROOT / "data" / "seed"  # the "spreadsheet": vendors, POs, PO li
 INVOICE_DIR = REPO_ROOT / "data" / "invoices"  # the 13 sample invoices and the answer key
 VAR_DIR = REPO_ROOT / "var"  # runtime files (database, uploads); git-ignored
 PAGES_DIR = VAR_DIR / "pages"  # page images, one folder per file hash
+UPLOADS_DIR = VAR_DIR / "uploads"  # the PDF of every run, named <run id>.pdf; never served
 
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{VAR_DIR / 'app.db'}")
 

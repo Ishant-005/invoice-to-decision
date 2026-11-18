@@ -1,5 +1,6 @@
 """Database connection (SQLite through SQLModel)."""
 
+import threading
 from collections.abc import Iterator
 from decimal import Decimal
 
@@ -35,6 +36,13 @@ def make_engine(url: str = config.DATABASE_URL) -> Engine:
 
 
 engine = make_engine()
+
+# One lock for everything that reads or changes the shared books (PO balances, invoice
+# history): the decision stages of a run, a person resolving a review, and a demo reset.
+# Holding it means two invoices can never both be checked against the same PO balance at
+# the same moment and both be approved. The slow AI call is made outside the lock.
+# (An RLock may be taken again by the thread that already holds it.)
+STATE_LOCK = threading.RLock()
 
 
 def create_tables(db_engine: Engine = engine) -> None:

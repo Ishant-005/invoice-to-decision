@@ -67,6 +67,7 @@ class Invoice(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     vendor_id: str | None = Field(default=None, foreign_key="vendor.id", index=True)
     po_id: str | None = Field(default=None, foreign_key="purchaseorder.id", index=True)
+    vendor_name_printed: str | None = None  # the name as read from the page
     invoice_number: str | None = None
     invoice_date: date | None = None
     pretax_amount: Decimal | None = Field(default=None, sa_type=DecimalText)
@@ -79,12 +80,17 @@ class Invoice(SQLModel, table=True):
 
 
 class Run(SQLModel, table=True):
-    """One trip of one PDF through the pipeline. Filled in by later milestones."""
+    """One trip of one PDF through the pipeline.
+
+    `status` says how far the pipeline got. `decision` is what the pipeline decided, and is
+    only ever set on a completed run. `resolution` is a person's later answer to a REVIEW."""
 
     id: str = Field(default_factory=lambda: uuid4().hex, primary_key=True)
     created_at: datetime = Field(default_factory=now_utc)
+    finished_at: datetime | None = None
     file_name: str
     file_hash: str = Field(index=True)
+    source: str = "upload"  # upload | sample
     status: str = "queued"  # queued | running | completed | failed
     failed_stage: str | None = None
     error_message: str | None = None
@@ -96,15 +102,17 @@ class Run(SQLModel, table=True):
 
 
 class StageEvent(SQLModel, table=True):
-    """What one stage of one run did: status, real duration, result and findings."""
+    """What one stage of one run did. The row is written when the stage starts (status
+    `running`) and filled in when it finishes: real measured duration, result and findings."""
 
     id: int | None = Field(default=None, primary_key=True)
     run_id: str = Field(foreign_key="run.id", index=True)
     stage: str  # receive | extract | validate | match | rules | decide
     status: str  # running | done | failed
     started_at: datetime = Field(default_factory=now_utc)
-    duration_ms: int | None = None
+    duration_ms: float | None = None  # measured, to a tenth of a millisecond
     result: dict | None = Field(default=None, sa_column=Column(JSON))
+    findings: list | None = Field(default=None, sa_column=Column(JSON))  # validate, match, rules
 
 
 class SavedExtraction(SQLModel, table=True):
