@@ -17,8 +17,8 @@ A feature not listed here has not been started.
 | Frontend reaches backend through the dev proxy | verified | `curl localhost:5173/api/health` returned `{"status":"ok"}` while `make dev` was running |
 | `make dev` runs both servers | verified | Both ports answered from one `make dev` |
 | `make test` | verified | 1 backend test passed, frontend build succeeded |
-| CI workflow (backend tests + frontend build) | see below | |
-| Process map | implemented | `docs/PROCESS_MAP.md` |
+| CI workflow (backend tests + frontend build) | verified | GitHub Actions run 44320105493 passed on `main` (first run failed on a wrong action version tag; fixed) |
+| Process map | implemented | `docs/PROCESS_MAP.md`. The Mermaid diagram has not been rendered by the implementer; check it displays on GitHub |
 
 The placeholder page's appearance in a real browser has not been checked by the implementer;
 only that it builds and is served.
