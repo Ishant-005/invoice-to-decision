@@ -37,4 +37,23 @@ a take-home case study that will be demoed live.
 
 ## Commands
 
-(Fill this section in during Milestone 0 and keep it current.)
+Run from the repo root. Needs Python 3.12, uv, Node and npm.
+
+| Command | What it does |
+|---|---|
+| `make install` | Install backend (`uv sync`) and frontend (`npm install`) dependencies |
+| `make dev` | Run backend (http://localhost:8000) and frontend (http://localhost:5173) together; Ctrl+C stops both |
+| `make test` | Backend tests (pytest), then frontend type-check and build |
+| `make lint` | `ruff` on the backend, `oxlint` on the frontend |
+| `make build` | Production build of the frontend into `frontend/dist` |
+| `make backend` / `make frontend` | Run just one of the two servers |
+
+Not built yet (added in later milestones): `make seed`, `make invoices`, `make eval`.
+
+Useful one-offs:
+
+- One backend test: `cd backend && uv run pytest tests/test_health.py -q`
+- Add a backend dependency: `cd backend && uv add <package>` (dev-only: `uv add --dev <package>`)
+- Add a shadcn/ui component: `cd frontend && npx shadcn@latest add <component>`
+- Health check: `curl http://localhost:8000/api/health`
+- CI status: `gh run list --limit 3`
