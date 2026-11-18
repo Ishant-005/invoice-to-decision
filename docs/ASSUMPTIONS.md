@@ -3,6 +3,15 @@
 Choices made where the spec is silent, one line each. Decisions the spec marks FIXED are not
 repeated here.
 
+## Known limits
+
+- Two-way match only: the invoice is compared with the purchase order. There is no goods receipt, so the process cannot confirm that what was billed was delivered.
+- Quantities are not tracked cumulatively per purchase order line; over-billing is caught on value, through the PO balance.
+- One currency (INR), one tax rate (GST 18%), and invoices of a single page are the focus.
+- The 13 sample invoices are synthetic and cleaner than real ones. Reading accuracy on real documents would be lower and needs a real sample to measure.
+- There is no sign-in. Anyone with the link can run invoices, resolve reviews and reset the data: this is a demo, not a deployment.
+- The app must run as a single process, and its data lives in one SQLite file that a host may wipe on restart (it is re-seeded on startup).
+
 ## Milestone 0
 
 - uv was not installed, so it was installed with Homebrew (`brew install uv`).
@@ -114,3 +123,23 @@ repeated here.
 - Page images are served by run ID and page number; the file-system paths of the images are not included in any response.
 - Logs are one line per event in `key=value` form; every line about a run starts with `run=<id>`.
 - Adding columns changed the database layout. There are no migrations: an older `var/app.db` must be deleted (it is re-created and seeded on startup).
+
+## Milestone 5
+
+- Visual direction: a quiet "paper and ink" look. Geist for text, tabular figures for every amount so columns line up, and a mono font only for machine identifiers (check codes, file names, fingerprints). One slate-blue accent; green, amber and red are used only for decisions and check results, always with an icon and a word.
+- The base font size is 14 px and the layout is built for 1280 px and wider (the spec's laptop width). It is not designed for phones.
+- No data-fetching library: one small hook (`useApi`) fetches a path, and can repeat the call while a condition holds. The run view polls every 700 ms while the run is queued or running; the dashboard polls every 1.5 s only while a run is in progress.
+- Live pacing in the run view: when the page has watched a run in progress, each finished stage is revealed 450 ms after the one before, because stages 3 to 6 finish within milliseconds of each other. A stage not yet revealed is shown as "Waiting"; nothing is shown as running unless the server says it is. Durations are always the server's measurements, and the page says so in a note under the timeline. A run opened later as a record is shown at once, with no pacing.
+- While a stage is running, the clock beside it counts from the moment the browser first saw it running. It is replaced by the server's measured duration when the stage finishes.
+- Amounts stay text in the browser. They are formatted in the Indian style by string handling, and the few sums needed for the balance bar are done in whole paise (BigInt), never floating point. Floating point is used only for the width of a bar.
+- The PO balance bar in the Match stage uses the balance as it was when the run was processed (stored with the run), so a record opened later still shows what the decision was based on. The Purchase orders screen shows today's balances.
+- Which stages start open: any stage with a problem or a note, Match whenever a PO was found (for the balance bar), Extract when a key field is missing or the reading was not live, Receive when the file was seen before. Everything can be opened or closed by hand.
+- The AI reader's free-text note is shown in the Extract stage labelled as the reader's own note; no check or decision uses it.
+- Reviewer controls sit in the decision banner beside "Next step". The purchase order selector appears only when the process did not confirm a PO from the invoice; it lists the vendor's purchase orders with the suggested one preselected.
+- Three small API additions were needed for the screens: `GET /api/invoices/{id}` (an earlier invoice with its stored reading and page images, for the side-by-side view), `GET /api/invoices/{id}/pages/{n}.png`, and `GET /api/samples/{file}/preview.png` (the first page of a sample, for the gallery). Pages of documents that never went through a run (seeded history, samples) are rendered the first time they are asked for.
+- The side-by-side comparison marks a field "Same" or "Different" by comparing the two stored readings in the browser; this is display only. The duplicate decision itself is made by the Rules stage.
+- The dashboard's decision filter is applied in the browser to the list already loaded, so the counts on the filter buttons are always visible. In the "Headline reason" column the leading "Needs review:" / "Approved:" is dropped because the Decision column already says it.
+- "How it works" shows this document itself: `docs/ASSUMPTIONS.md` is bundled into the frontend when it is built, so the screen and the document cannot drift apart. The rules table is read from the API on every visit. The process map's wording is written in the frontend; its thresholds are filled in from the API.
+- After a reset the app returns to the dashboard and reloads its data. There is no sign-in, so the reviewer is not named.
+- `react-router` was added for the five addresses (`/`, `/new`, `/runs/<id>`, `/purchase-orders`, `/how-it-works`). In development Vite serves them; serving the built app from FastAPI (one service, one URL) is left to the deployment milestone.
+- `make ui-check` (scripts/ui_check.py) drives the real app in a headless browser with the Playwright library already used for generating PDFs. It is a manual check that calls the live model, not part of `make test` or CI.
