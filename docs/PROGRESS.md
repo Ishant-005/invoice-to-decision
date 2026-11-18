@@ -145,7 +145,7 @@ Limits to be honest about:
 
 "Verified" means the implementer drove the real app (frontend on 5173, backend on 8000, live
 model) in a headless Chromium browser at 1280 px on 2026-11-18, took screenshots and looked at
-each one. The frontend has no unit tests of its own; `make test` type-checks and builds it.
+each one. `make test` also runs the frontend's own tests (4, for the dashboard) and type-checks and builds it.
 
 | Feature | Status | Evidence |
 |---|---|---|
@@ -160,7 +160,12 @@ each one. The frontend has no unit tests of its own; `make test` type-checks and
 | Implied PO: the suggested PO with its evidence and a confirm action | verified | Case 9: PO-2290 suggested at 94 / 100, PO-2252 shown as considered; "Approve on PO-2290" pressed after a comment, PO-2290 then billed ₹1,95,000 |
 | Reviewer approve / reject with a required comment | verified | Both buttons are disabled until a comment is typed (checked in the browser) and have equal weight; case 9 approved through the UI. Rejecting through the UI was done before the controls were restyled, not repeated after |
 | Consequence sentence specific to the invoice | verified | Read off the screen: case 5 "adds ₹2,40,000 before tax to PO-2260 and takes it ₹40,000 over its value"; case 8 adds the ₹1,18,000 double-payment risk; case 10 warns the total could not be read |
-| Dashboard tiles filter the runs table | verified | Clicking "Awaiting review" left the 4 awaiting runs; screenshot |
+| One dashboard filter system (All, Approved, Awaiting review, Rejected); tiles switch to the matching filter | tested + verified | `frontend/src/pages/Dashboard.test.tsx`: tile count, filter count and rows shown agree, before and after a reviewer approves one run and rejects another (the test fails if a filter is broken: checked by breaking it once). Backend: `test_the_dashboard_tiles_agree_with_the_runs_listed_under_each_filter` does the same against the real API, with real reviewer actions. Seen in the browser: "Awaiting review 3" on tile, filter and rows |
+| State column says who settled the run; plain empty-state text per filter | tested + verified | Same frontend test file; screenshot shows "Approved by the process" |
+| Light and dark theme with a header toggle | verified | In the browser with the operating system set to dark: first visit is light; after the toggle the choice is stored; after a reload the dark class is already on the page when the HTML has been parsed, before the app starts (no flash) |
+| Every colour from theme tokens | verified | Search for hard-coded colours in `frontend/src` finds none (4 were replaced, plus the dialog backdrop) |
+| Contrast in both themes | verified | Calculated from the tokens: lowest text pair 5.99 to 1 (light), 6.40 to 1 (dark). Not measured: text dimmed with opacity |
+| Dark theme on all five screens and four finished runs | verified | Screenshots of dashboard, new run, purchase orders, how it works, and the runs for the Acme clean invoice, the Zenith over-balance invoice (hatched overage readable), the Acme near-duplicate and the damaged Corelight scan, each looked at; invoice images stay white on a neutral surface |
 | Amount column on one basis (including tax) | verified | Case 10 row shows "not found" with "₹2,20,000 before tax" beneath |
 | No finding codes in the decision banner; kept in the stage detail | verified | 0 code elements in the banner (DOM check); codes visible beside each check |
 | Navigation: quiet active style, visible keyboard focus | verified | Screenshot after pressing Tab shows the focus ring; the active tab has an underline only |
@@ -171,7 +176,7 @@ each one. The frontend has no unit tests of its own; `make test` type-checks and
 | Reset button with a confirmation dialog | verified | Used by `make ui-check`: dialog confirmed, dashboard came back empty |
 | Failed run shown as "No decision" with the stage and the reason | verified | A text file uploaded with a .pdf name: "The run stopped in the Receive stage" |
 | Error state (run not found), empty state (no runs), loading states | verified / implemented | Error and empty states seen in screenshots. Loading states exist on every screen but pass too quickly locally to have been looked at |
-| All 13 samples through the UI after a reset match `expected.json` | verified | `make ui-check`: 13 of 13, run again after the rename and the UI changes. All extractions were live |
+| All 13 samples through the UI after a reset match `expected.json` | verified | `make ui-check`: 13 of 13, run again after the filter and theme changes. All extractions were live |
 | New endpoints: invoice detail, invoice page image, sample preview | tested + verified | 3 tests in `tests/integration/test_reference_api.py`; used by the screens above |
 
 Limits to be honest about:
@@ -186,7 +191,7 @@ Limits to be honest about:
 
 ## Known issues
 
-- None open. (The Starlette test-client deprecation warning noted earlier no longer appears: 293 tests pass with no warnings.)
+- None open. (The Starlette test-client deprecation warning noted earlier no longer appears: 294 backend tests pass with no warnings.)
 
 ## Milestones 6 and 7
 

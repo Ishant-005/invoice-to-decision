@@ -43,7 +43,7 @@ Run from the repo root. Needs Python 3.12, uv, Node and npm.
 |---|---|
 | `make install` | Install backend (`uv sync`) and frontend (`npm install`) dependencies |
 | `make dev` | Run backend (http://localhost:8000) and frontend (http://localhost:5173) together; Ctrl+C stops both |
-| `make test` | Backend tests (pytest), then frontend type-check and build |
+| `make test` | Backend tests (pytest), frontend tests (Vitest), then frontend type-check and build |
 | `make lint` | `ruff` on the backend, `oxlint` on the frontend |
 | `make build` | Production build of the frontend into `frontend/dist` |
 | `make backend` / `make frontend` | Run just one of the two servers |
@@ -64,6 +64,8 @@ Useful one-offs:
 - Add a shadcn/ui component: `cd frontend && npx shadcn@latest add <component>`
 - The API tests only (extraction stood in, no API key): `cd backend && uv run pytest tests/integration -q`
 - The five screens: `/` dashboard, `/new` new run, `/runs/<id>` run view, `/purchase-orders`, `/how-it-works` (frontend code in `frontend/src/pages`, run-view parts in `frontend/src/components/run`)
+- The frontend tests only: `cd frontend && npm test` (one file: `npx vitest run src/pages/Dashboard.test.tsx`)
+- Colours: every colour is a token in `frontend/src/index.css` (`:root` for light, `.dark` for dark); never write a colour in a component
 - Health check: `curl http://localhost:8000/api/health`
 - Run a sample over HTTP (**live API call**): `curl -F sample=acme_2026-11-05.pdf http://localhost:8000/api/runs`, then `curl http://localhost:8000/api/runs/<id>`
 - After a change to `backend/app/models.py`, delete `var/app.db`; it is re-created and seeded on startup (there are no migrations)
