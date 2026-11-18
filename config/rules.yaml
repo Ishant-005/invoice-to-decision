@@ -1,0 +1,27 @@
+# Company rules and thresholds used by the Validate, Match and Rules stages.
+# Change a number here and the decisions change; no code needs editing.
+# The app shows these values on the "How it works" screen.
+
+validate:
+  rounding_tolerance_rupees: 1    # arithmetic may be off by up to this much (rounding)
+  max_invoice_age_days: 180       # older invoices get a warning
+  currency: INR                   # the only currency accepted
+
+match:
+  # Words removed from a vendor name before comparing ("Acme Packaging Pvt Ltd" -> "acme packaging").
+  vendor_name_suffixes: [pvt, ltd, private, limited, llp, co]
+  vendor_fuzzy_min_score: 88      # a similar name at or above this is SUGGESTED, never confirmed
+  line_match_min_score: 70        # invoice line and PO line descriptions count as the same item
+  # Finding a purchase order when the invoice does not quote one. Points add up to 100.
+  implied_po_points_amount_fits: 40    # the invoice amount fits the PO's remaining balance
+  implied_po_points_description: 40    # scaled by how similar the line descriptions are
+  implied_po_points_date: 20           # the invoice is dated on or after the PO
+  implied_po_strong_score: 70          # a PO scoring at least this is a strong candidate
+
+rules:
+  # An invoice may take a PO over its value only if the overage is within BOTH limits.
+  po_overage_max_percent: 2
+  po_overage_max_rupees: 5000
+  price_variance_max_percent: 2   # invoice unit price vs PO unit price, either direction
+  # "INV-1017-A" vs "INV-1017": one number is the other plus at most this many characters.
+  duplicate_max_extra_characters: 2

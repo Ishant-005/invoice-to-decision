@@ -23,3 +23,10 @@ def format_inr(amount: Decimal) -> str:
     """'₹1,06,200' for whole rupees, '₹1,06,200.50' when there are paise."""
     has_paise = amount != amount.to_integral_value()
     return "₹" + indian_number(amount, 2 if has_paise else 0)
+
+
+def plain_number(value: Decimal) -> str:
+    """A quantity or percentage without trailing zeros: 60.00 -> '60', 2.50 -> '2.5'."""
+    if value == value.to_integral_value():
+        return str(value.to_integral_value())
+    return str(value.normalize())
