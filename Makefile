@@ -1,6 +1,6 @@
 # Common commands for the project. Run `make help` to list them.
 
-.PHONY: help install dev backend frontend test lint build seed invoices check-invoices decisions eval e2e
+.PHONY: help install dev backend frontend test lint build seed invoices check-invoices decisions eval e2e ui-check
 
 help:
 	@echo "make install   Install backend and frontend dependencies"
@@ -14,6 +14,7 @@ help:
 	@echo "make decisions  Show the decision for each sample invoice (CASES=\"1 5\" for full detail)"
 	@echo "make eval      LIVE AI: read all 15 PDFs, compare with the answer key, write docs/EXTRACTION_EVAL.md"
 	@echo "make e2e       LIVE AI: 13 cases + 3 sequences through all six stages, write docs/E2E_CHECK.md"
+	@echo "make ui-check  LIVE AI: with 'make dev' running, run all 13 samples in a real browser and compare with the answer key"
 
 install:
 	cd backend && uv sync
@@ -73,3 +74,9 @@ eval:
 # Live extraction feeding the decision logic: 13 cases and 3 sequences against the answer key.
 e2e:
 	cd backend && uv run python ../scripts/e2e_check.py
+
+# Drives the web app in a headless browser: reset, run all 13 samples by clicking them, read
+# each decision off the screen and compare with the answer key. Needs `make dev` running in
+# another terminal. Resets the demo data and makes 13 live AI calls.
+ui-check:
+	cd backend && uv run python ../scripts/ui_check.py

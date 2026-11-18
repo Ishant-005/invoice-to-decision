@@ -53,6 +53,7 @@ Run from the repo root. Needs Python 3.12, uv, Node and npm.
 | `make decisions` | Run the answer key's ground-truth extractions through the decision logic and print one line per case; `make decisions CASES="1 5 8"` prints those decisions in full. No AI model, no saved database |
 | `make eval` | **Calls the live API (about US $0.22).** Reads all 15 PDFs with the model, scores every field against the answer key, writes `docs/EXTRACTION_EVAL.md`; `make eval NOTE="what changed"` labels the run in the history table |
 | `make e2e` | **Calls the live API (about US $0.26).** 13 cases and 3 sequences through Receive, Extract and the decision logic, compared with the answer key; writes `docs/E2E_CHECK.md` |
+| `make ui-check` | **Calls the live API (about US $0.22) and resets the demo data.** With `make dev` running, drives the web app in a headless browser: reset, run all 13 samples by clicking them, compare each decision on screen with the answer key |
 
 Useful one-offs:
 
@@ -62,6 +63,7 @@ Useful one-offs:
 - Add a backend dependency: `cd backend && uv add <package>` (dev-only: `uv add --dev <package>`)
 - Add a shadcn/ui component: `cd frontend && npx shadcn@latest add <component>`
 - The API tests only (extraction stood in, no API key): `cd backend && uv run pytest tests/integration -q`
+- The five screens: `/` dashboard, `/new` new run, `/runs/<id>` run view, `/purchase-orders`, `/how-it-works` (frontend code in `frontend/src/pages`, run-view parts in `frontend/src/components/run`)
 - Health check: `curl http://localhost:8000/api/health`
 - Run a sample over HTTP (**live API call**): `curl -F sample=01_acme_clean.pdf http://localhost:8000/api/runs`, then `curl http://localhost:8000/api/runs/<id>`
 - After a change to `backend/app/models.py`, delete `var/app.db`; it is re-created and seeded on startup (there are no migrations)
