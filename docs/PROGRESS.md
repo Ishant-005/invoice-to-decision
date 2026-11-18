@@ -105,11 +105,46 @@ Limits to be honest about: 15 synthetic invoices is a small, clean sample, so "2
 says the reading works on these layouts, not that it is 100% accurate in general. The model
 has no temperature setting, so a future run could differ; today's separate passes agreed.
 
+## Milestone 4: Pipeline and API
+
+"Tested" means the API integration tests in `backend/tests/integration/` (the real app and
+pipeline on a temporary database; only the AI call is replaced by a stand-in that returns the
+answer key's ground truth). "Verified" means done with `curl` against a running server with
+the live model on 2026-11-18.
+
+| Feature | Status | Evidence |
+|---|---|---|
+| `POST /api/runs` (sample or upload) answers at once with a run ID; the pipeline runs in the background | tested + verified | `test_a_run_is_accepted_at_once_and_can_be_polled_to_completion`; live: `202` then 7 polls at 0.7 s until `completed` |
+| A stage row is written when a stage starts and filled in when it finishes | tested + verified | `test_stage_rows_are_written_while_the_run_is_in_progress`; live polls showed Receive `done` and Extract `running` while the model was reading |
+| Real measured durations, no delays | tested + verified | Live sample 1: receive 27.9 ms, extract 4,236.2 ms, validate 0.2, match 2.1, rules 2.0, decide 0.8. Sample 5: 24.8 / 3,906.2 / 0.3 / 2.2 / 2.3 / 0.4 |
+| `GET /api/runs/{id}`: run, six stages, findings per stage, decision | tested + verified | Tests; JSON of both live runs read |
+| All 13 samples reach the expected decision over HTTP | tested | `test_every_sample_reaches_its_expected_decision_over_http` (extraction stood in). Live over HTTP: samples 1 and 5 only |
+| APPROVE adds the pre-tax amount to the PO in the same commit; REVIEW and REJECT do not | tested + verified | Tests; live: PO-2231 billed 0 to 1,80,000 after sample 1; PO-2260 unchanged after sample 5 |
+| The three sequences | tested | `test_sequence_from_the_answer_key` and two more detailed tests. Live: only "same file twice" (second run REJECT, "reused: identical file", no AI call) |
+| Human review: approve / reject with a required comment, once only; chosen PO must be the vendor's | tested + verified | 7 tests; live: sample 5 approved with a comment, PO-2260 billed 1,00,000 to 3,40,000; blank comment refused with 422 |
+| A run fails cleanly when extraction raises an error | tested | `test_a_run_fails_cleanly_when_extraction_raises_an_error`, `test_an_unexpected_error_fails_the_run_without_leaking_details`. Not provoked on the live server in this milestone (the Extract stage's own failure paths were verified live in Milestone 3) |
+| A file that is not a PDF fails in Receive with a clear message; oversize upload refused | tested + verified | Tests; live: a text file gave a failed run, "Only PDF files are accepted". The 413 path is tested only |
+| Reset restores the seed state, also during a run | tested + verified | `test_reset_restores_the_seed_state`, `test_a_reset_during_a_run_abandons_it_without_touching_the_books`; live: after reset no runs, balances back. The mid-run reset is tested only |
+| Auto-seed on startup with an empty database | verified | Server started with no `var/app.db`; POs and seeded history were there |
+| Runs interrupted by a restart are marked failed on startup | tested | `test_runs_left_unfinished_by_a_stopped_server_are_marked_failed_on_startup` |
+| `GET /api/runs` with filters, `/samples`, `/purchase-orders`, `/purchase-orders/{id}`, `/vendors`, `/stats`, `/config/rules`, page images | tested + verified | `test_reference_api.py`; live: runs list, PO detail, stats and a page image (PNG, 200) fetched. `/samples`, `/vendors` and `/config/rules` are tested only |
+| Money is text in every response | tested | `test_money_is_sent_as_text_never_as_a_floating_point_number` |
+| Logs carry the run ID on every line | verified | Server log read: `run=<id> stage=extract status=done duration_ms=3906.2` |
+
+Live API usage for this milestone: 2 extraction calls (5,509 + 476 and 5,535 + 402 tokens).
+
+Limits to be honest about:
+
+- Two runs at exactly the same time have not been tested. The lock that keeps them from
+  both using one PO balance is simple, but there is no automated test that races two runs.
+- The app must run as a single process (one lock, background tasks in-process).
+- There are no database migrations; a database from before this milestone must be deleted.
+- Nothing has been seen in a browser yet. That is Milestone 5.
+
 ## Known issues
 
-- pytest prints one deprecation warning from Starlette's test client (it suggests the `httpx2`
-  package instead of `httpx`). Harmless; tests pass.
+- None open. (The Starlette test-client deprecation warning noted earlier no longer appears: 290 tests pass with no warnings.)
 
-## Milestones 4 to 7
+## Milestones 5 to 7
 
 Not started.

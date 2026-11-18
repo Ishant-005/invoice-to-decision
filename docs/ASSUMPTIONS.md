@@ -89,3 +89,28 @@ repeated here.
 - The answer key now records vendor names as printed. Layout C prints the name in capitals, so cases 3, 9 and 13 have `SHARMA OFFICE SUPPLIES` and `QUICKFIX HARDWARE CO.` as ground truth. The first eval run showed this as 3 mismatches where the model was right and the key was wrong; the prompt was not changed. Regenerating left all 15 PDFs byte-identical.
 - `make eval` writes what the model returned to `data/eval/latest_extractions.json` and a summary of every run to `data/eval/history.json`; both are committed as evidence. Neither the eval nor `make e2e` touches the app database or the daily cap.
 - `make e2e` was added for the end-to-end check (SPEC 8, item 4). It uses the real Receive and Extract code with an in-memory database, and the same comparison function as the answer-key test.
+
+## Milestone 4
+
+- One `stage_event` row per stage per run: it is inserted with status `running` when the stage starts and the same row is filled in (status, duration, result, findings) when it finishes. The API always returns six stages in order, showing `waiting` for ones not reached yet and `not_run` for ones a failure prevented.
+- Stage durations are measured with a monotonic clock and stored to a tenth of a millisecond, because the deterministic stages take well under 1 ms and "0 ms" would look made up. The Match stage's time includes reading the vendors, POs and invoice history from the database; the Decide stage's time includes recording the outcome.
+- The pipeline runs as a FastAPI background task in the same process (no queue, no worker). If the server stops mid-run, that run is marked failed on the next startup with "the server restarted" rather than left spinning.
+- One process-wide lock covers everything that reads or changes the books: stages 3 to 6 of a run, a review resolution and a reset. Two invoices can therefore never be checked against the same PO balance at the same moment. The AI call is outside the lock. This relies on the app running as a single process.
+- A reset while a run is in progress abandons that run: before every write the run checks its own row still exists, and stops if it does not. Nothing from it reaches the restored books.
+- "Today" for the date checks is the date in India (UTC+5:30), read once per run, whatever time zone the server is in.
+- `POST /api/runs` takes a multipart form with either `file` (a PDF) or `sample` (a file name from `GET /api/samples`) and answers `202` with the run ID. The 10 MB limit is checked here (`413`, nothing stored). Every other file problem (not a PDF, damaged, too many pages) is found by the Receive stage and shows as a failed run with the reason, so it is visible in the run view like everything else.
+- The PDF of each run is stored as `var/uploads/<run id>.pdf`, never under a user-supplied name, and no route serves it. A reset deletes these files. `python-multipart` was added because FastAPI needs it for uploads.
+- A failed run's message is the stage's own plain-English error when there is one (bad file, AI service down). For any other exception the user sees the stage and the error type only; the full detail goes to the server log.
+- A failed run records no invoice, so it never counts as an "earlier invoice" in duplicate checks.
+- Every completed run adds one row to the invoice history with the vendor and PO the Match stage arrived at, in state approved / awaiting_review / rejected. An invoice awaiting review shows against its PO but has not been added to billed-to-date.
+- The run keeps what the pipeline decided (`decision` stays REVIEW after a person resolves it); the person's answer is stored separately. The API's `state` field combines the two: processing, approved, awaiting_review, approved_by_reviewer, rejected_by_reviewer, rejected, failed.
+- Human review: the comment is required and must not be blank; a run can be resolved once. Approving books the pre-tax amount against the PO the pipeline matched or suggested, or against `po_id` if the reviewer names one, which must exist and belong to the invoice's vendor. If the pre-tax amount is unknown the invoice cannot be approved, only rejected.
+- A reviewer may approve an invoice that takes a PO over its value (that judgement is what the review is for); the PO's remaining balance then shows as negative.
+- An invoice rejected by a reviewer becomes `rejected`, so a corrected resubmission is not flagged as a duplicate of it.
+- Money in API responses is text (`"180000.00"`), never a JSON number. All responses go through Pydantic models to guarantee this. Times are UTC with a trailing `Z`.
+- `GET /api/runs` returns the runs (newest first) and, separately, `seeded_history`: the seeded invoices have no run, so they are not mixed into the runs. Filters: `decision`, `status`, `state`, `vendor` (a vendor ID).
+- `GET /api/stats` counts only runs made in the app. "Processed" means runs that reached a decision. Approved value is given before tax and including tax, and covers approvals by the pipeline and by a reviewer; an approved invoice with no readable total is left out of the including-tax figure.
+- `GET /api/purchase-orders` returns each PO with its lines and invoices, the same shape as the single-PO endpoint, since there are only ten.
+- Page images are served by run ID and page number; the file-system paths of the images are not included in any response.
+- Logs are one line per event in `key=value` form; every line about a run starts with `run=<id>`.
+- Adding columns changed the database layout. There are no migrations: an older `var/app.db` must be deleted (it is re-created and seeded on startup).

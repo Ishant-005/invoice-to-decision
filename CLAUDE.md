@@ -61,6 +61,9 @@ Useful one-offs:
 - The answer-key test only: `cd backend && uv run pytest tests/test_answer_key.py -v`
 - Add a backend dependency: `cd backend && uv add <package>` (dev-only: `uv add --dev <package>`)
 - Add a shadcn/ui component: `cd frontend && npx shadcn@latest add <component>`
+- The API tests only (extraction stood in, no API key): `cd backend && uv run pytest tests/integration -q`
 - Health check: `curl http://localhost:8000/api/health`
+- Run a sample over HTTP (**live API call**): `curl -F sample=01_acme_clean.pdf http://localhost:8000/api/runs`, then `curl http://localhost:8000/api/runs/<id>`
+- After a change to `backend/app/models.py`, delete `var/app.db`; it is re-created and seeded on startup (there are no migrations)
 - Reset demo data on a running server: `curl -X POST http://localhost:8000/api/demo/reset`
 - CI status: `gh run list --limit 3`
