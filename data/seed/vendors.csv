@@ -1,0 +1,6 @@
+vendor_id,name,gstin,status,city,state
+V-001,Acme Packaging Pvt Ltd,06AAACA0001A1Z1,active,Gurugram,Haryana
+V-002,Brightline Logistics LLP,07AAAFB0002B1ZP,active,New Delhi,Delhi
+V-003,Sharma Office Supplies,06AAAPS0003S1ZP,active,Gurugram,Haryana
+V-004,Corelight Electricals Pvt Ltd,27AAACC0004C1ZO,active,Mumbai,Maharashtra
+V-005,Zenith Facility Services Pvt Ltd,06AAACZ0005Z1ZT,active,Gurugram,Haryana

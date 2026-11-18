@@ -1,0 +1,13 @@
+po_id,line_no,description,quantity,unit_price,amount
+PO-2219,1,Shipping carton 18x12x10,2000,100.00,200000.00
+PO-2231,1,Corrugated box 12x10x8,500,180.00,90000.00
+PO-2231,2,Bubble wrap roll,200,450.00,90000.00
+PO-2240,1,"Freight services, October, Delhi NCR",1,100000.00,100000.00
+PO-2252,1,A4 paper ream,40,320.00,12800.00
+PO-2252,2,Printer toner,25,2400.00,60000.00
+PO-2260,1,"Housekeeping contract, monthly (Sep to Nov)",3,100000.00,300000.00
+PO-2275,1,LED panel light 40W,100,1500.00,150000.00
+PO-2281,1,MCB distribution board,60,2500.00,150000.00
+PO-2290,1,Ergonomic office chair,30,6500.00,195000.00
+PO-2296,1,"Copper cable 2.5 sq mm, 90 m coil",200,1100.00,220000.00
+PO-2301,1,"Warehouse-to-store transfers, November",1,80000.00,80000.00
