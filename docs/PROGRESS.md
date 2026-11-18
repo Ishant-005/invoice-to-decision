@@ -157,14 +157,21 @@ each one. The frontend has no unit tests of its own; `make test` type-checks and
 | Extract: fields beside the quoted evidence; nulls marked "not found on the document" | verified | Case 10: invoice number and total marked not found; the reader's note names the ink blot |
 | Validate / Rules checklists; Match with vendor, PO, how matched, and the PO balance bar | verified | Case 5: bar shows ₹1,00,000 billed, ₹2,40,000 this invoice, over the PO value by ₹40,000 |
 | Probable duplicate: the earlier invoice side by side | verified | Case 8: both page images and a field-by-field table against seeded INV-1017, 6 of 7 fields the same |
-| Implied PO: the suggested PO with its evidence and a confirm action | verified | Case 9: PO-2290 suggested at 94 / 100, PO-2252 shown as considered; "Confirm PO-2290 and approve" pressed, PO-2290 then fully billed |
-| Reviewer approve / reject with a required comment | verified | Empty comment refused on screen; case 9 approved and case 8 rejected through the UI; the dashboard showed "Approved by reviewer" and "Rejected by reviewer" |
+| Implied PO: the suggested PO with its evidence and a confirm action | verified | Case 9: PO-2290 suggested at 94 / 100, PO-2252 shown as considered; "Approve on PO-2290" pressed after a comment, PO-2290 then billed ₹1,95,000 |
+| Reviewer approve / reject with a required comment | verified | Both buttons are disabled until a comment is typed (checked in the browser) and have equal weight; case 9 approved through the UI. Rejecting through the UI was done before the controls were restyled, not repeated after |
+| Consequence sentence specific to the invoice | verified | Read off the screen: case 5 "adds ₹2,40,000 before tax to PO-2260 and takes it ₹40,000 over its value"; case 8 adds the ₹1,18,000 double-payment risk; case 10 warns the total could not be read |
+| Dashboard tiles filter the runs table | verified | Clicking "Awaiting review" left the 4 awaiting runs; screenshot |
+| Amount column on one basis (including tax) | verified | Case 10 row shows "not found" with "₹2,20,000 before tax" beneath |
+| No finding codes in the decision banner; kept in the stage detail | verified | 0 code elements in the banner (DOM check); codes visible beside each check |
+| Navigation: quiet active style, visible keyboard focus | verified | Screenshot after pressing Tab shows the focus ring; the active tab has an underline only |
+| Line table: "Wording match", number only for matched lines | verified | Case 5: 84 / 100 for the housekeeping line, a dash for the unlisted line |
+| Sample files renamed to neutral names; PDFs unchanged | tested + verified | All 13 SHA-256 hashes identical before and after (also after `make invoices` regenerated them); every hash still has its saved reading in the local database; 293 tests pass |
 | Purchase orders screen: value, billed, remaining, lines and invoices per PO | verified | Screenshot with PO-2260 open; PO-2275 shows −₹1,200 "over value" after case 6 |
 | How it works: process map, rules read from the API, assumptions | verified | Screenshot; the rules table shows the values in `config/rules.yaml` |
 | Reset button with a confirmation dialog | verified | Used by `make ui-check`: dialog confirmed, dashboard came back empty |
 | Failed run shown as "No decision" with the stage and the reason | verified | A text file uploaded with a .pdf name: "The run stopped in the Receive stage" |
 | Error state (run not found), empty state (no runs), loading states | verified / implemented | Error and empty states seen in screenshots. Loading states exist on every screen but pass too quickly locally to have been looked at |
-| All 13 samples through the UI after a reset match `expected.json` | verified | `make ui-check`: 13 of 13, run twice (once with the scratch script, once as `scripts/ui_check.py`). All extractions were live |
+| All 13 samples through the UI after a reset match `expected.json` | verified | `make ui-check`: 13 of 13, run again after the rename and the UI changes. All extractions were live |
 | New endpoints: invoice detail, invoice page image, sample preview | tested + verified | 3 tests in `tests/integration/test_reference_api.py`; used by the screens above |
 
 Limits to be honest about:
