@@ -1,5 +1,5 @@
 {
-  "_about": "The one data file behind scripts/generate_invoices.py. 'truth' is what a perfect reader should extract from the PDF (amounts are strings so they are never floats). 'print' holds things that affect only how the page looks. 'expected' is the answer the decision logic must reach after a fresh reset. Edit this file, then run `make invoices`.",
+  "_about": "The one data file behind scripts/generate_invoices.py. 'truth' is what a perfect reader should extract from the PDF (amounts are strings so they are never floats). 'print' holds things that affect only how the page looks ('scan_seed' fixes a scan's paper noise; it is the name the file had when first generated, kept so the PDF stays byte-for-byte the same). 'expected' is the answer the decision logic must reach after a fresh reset. Edit this file, then run `make invoices`.",
 
   "buyer": {
     "name": "Meridian Home Retail Pvt Ltd",
@@ -117,9 +117,9 @@
     },
     {
       "case": 1,
-      "file": "01_acme_clean.pdf",
+      "file": "acme_2026-11-05.pdf",
       "letterhead": "acme",
-      "description": "Acme Packaging: corrugated boxes and bubble wrap, quoting PO-2231",
+      "description": "Acme Packaging: corrugated boxes and bubble wrap",
       "print": {},
       "truth": {
         "document_type": "invoice",
@@ -151,7 +151,7 @@
     },
     {
       "case": 2,
-      "file": "02_brightline_tax_inclusive.pdf",
+      "file": "brightline_2026-11-02.pdf",
       "letterhead": "brightline",
       "description": "Brightline Logistics: October freight as a single tax-inclusive amount",
       "print": {},
@@ -184,10 +184,10 @@
     },
     {
       "case": 3,
-      "file": "03_sharma_scan.pdf",
+      "file": "sharma_2026-10-28.pdf",
       "letterhead": "sharma",
       "description": "Sharma Office Supplies: paper and toner, a scanned bill",
-      "print": {"scan": true},
+      "print": {"scan": true, "scan_seed": "03_sharma_scan.pdf"},
       "truth": {
         "document_type": "invoice",
         "vendor_name": "SHARMA OFFICE SUPPLIES",
@@ -218,7 +218,7 @@
     },
     {
       "case": 4,
-      "file": "04_zenith_october.pdf",
+      "file": "zenith_2026-10-31.pdf",
       "letterhead": "zenith",
       "description": "Zenith Facility Services: housekeeping for October",
       "print": {},
@@ -252,7 +252,7 @@
     },
     {
       "case": 5,
-      "file": "05_zenith_over_balance.pdf",
+      "file": "zenith_2026-11-14.pdf",
       "letterhead": "zenith",
       "description": "Zenith Facility Services: housekeeping for November plus additional deep cleaning",
       "print": {},
@@ -287,7 +287,7 @@
     },
     {
       "case": 6,
-      "file": "06_corelight_freight.pdf",
+      "file": "corelight_2026-11-06.pdf",
       "letterhead": "corelight",
       "description": "Corelight Electricals: LED panel lights with a freight charge",
       "print": {"hsn": ["9405", "9965"], "units": ["NOS", "LS"]},
@@ -322,7 +322,7 @@
     },
     {
       "case": 7,
-      "file": "07_corelight_price_hike.pdf",
+      "file": "corelight_2026-11-10.pdf",
       "letterhead": "corelight",
       "description": "Corelight Electricals: MCB distribution boards",
       "print": {"hsn": ["8537"], "units": ["NOS"]},
@@ -356,10 +356,10 @@
     },
     {
       "case": 8,
-      "file": "08_acme_near_duplicate.pdf",
+      "file": "acme_2026-10-03.pdf",
       "letterhead": "acme",
-      "description": "Acme Packaging: 1,000 shipping cartons, a scanned copy",
-      "print": {"scan": true},
+      "description": "Acme Packaging: 1,000 shipping cartons, a scanned bill",
+      "print": {"scan": true, "scan_seed": "08_acme_near_duplicate.pdf"},
       "truth": {
         "document_type": "invoice",
         "vendor_name": "Acme Packaging Pvt Ltd",
@@ -390,9 +390,9 @@
     },
     {
       "case": 9,
-      "file": "09_sharma_no_po.pdf",
+      "file": "sharma_2026-11-08.pdf",
       "letterhead": "sharma",
-      "description": "Sharma Office Supplies: office chairs, no purchase order quoted",
+      "description": "Sharma Office Supplies: ergonomic office chairs",
       "print": {},
       "truth": {
         "document_type": "invoice",
@@ -423,10 +423,10 @@
     },
     {
       "case": 10,
-      "file": "10_corelight_damaged_scan.pdf",
+      "file": "corelight_2026-11-11.pdf",
       "letterhead": "corelight",
-      "description": "Corelight Electricals: copper cable, a damaged scan",
-      "print": {"scan": true, "stained_total": "259600.00", "hsn": ["8544"], "units": ["COIL"]},
+      "description": "Corelight Electricals: copper cable, a scanned bill",
+      "print": {"scan": true, "scan_seed": "10_corelight_damaged_scan.pdf", "stained_total": "259600.00", "hsn": ["8544"], "units": ["COIL"]},
       "truth": {
         "document_type": "invoice",
         "vendor_name": "Corelight Electricals Pvt Ltd",
@@ -456,9 +456,9 @@
     },
     {
       "case": 11,
-      "file": "11_acme_name_variant.pdf",
+      "file": "acme_2026-11-12.pdf",
       "letterhead": "acme",
-      "description": "Acme Packaging: 500 shipping cartons, company name printed in full, no GSTIN",
+      "description": "Acme Packaging: 500 shipping cartons",
       "print": {"vendor_name": "ACME PACKAGING PRIVATE LIMITED", "hide_gstin": true},
       "truth": {
         "document_type": "invoice",
@@ -490,7 +490,7 @@
     },
     {
       "case": 12,
-      "file": "12_brightline_bad_sum.pdf",
+      "file": "brightline_2026-11-14.pdf",
       "letterhead": "brightline",
       "description": "Brightline Logistics: November warehouse-to-store transfers in two parts",
       "print": {},
@@ -524,7 +524,7 @@
     },
     {
       "case": 13,
-      "file": "13_unknown_vendor.pdf",
+      "file": "quickfix_2026-11-09.pdf",
       "letterhead": "quickfix",
       "description": "Quickfix Hardware Co.: hinges and cordless drills",
       "print": {},
@@ -561,19 +561,19 @@
   "sequences": [
     {
       "name": "same_file_twice",
-      "steps": ["01_acme_clean.pdf", "01_acme_clean.pdf"],
+      "steps": ["acme_2026-11-05.pdf", "acme_2026-11-05.pdf"],
       "expected_last": {"decision": "REJECT", "finding_codes": ["DUPLICATE_EXACT"]},
       "note": "No reset between the two runs. The second is an exact duplicate (same file, same vendor and number)."
     },
     {
       "name": "october_then_over_balance",
-      "steps": ["04_zenith_october.pdf", "05_zenith_over_balance.pdf"],
+      "steps": ["zenith_2026-10-31.pdf", "zenith_2026-11-14.pdf"],
       "expected_last": {"decision": "REVIEW", "owner": "procurement", "po_overage": "140000.00", "finding_codes": ["PO_BALANCE"]},
       "note": "Case 4 takes PO-2260 to 2,00,000 billed; case 5 then adds 2,40,000 against a PO of 3,00,000."
     },
     {
       "name": "name_variant_then_near_duplicate",
-      "steps": ["11_acme_name_variant.pdf", "08_acme_near_duplicate.pdf"],
+      "steps": ["acme_2026-11-12.pdf", "acme_2026-10-03.pdf"],
       "expected_last": {"decision": "REVIEW", "finding_codes": ["DUPLICATE_PROBABLE"]},
       "note": "Case 11 takes PO-2219 to 1,50,000 billed. Case 8 is still caught as a probable duplicate of INV-1017 (and is now also 50,000 over the PO)."
     }

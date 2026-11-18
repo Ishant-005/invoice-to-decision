@@ -4,7 +4,7 @@
   "model": "claude-sonnet-5-5",
   "prompt_version": "v1",
   "extractions": {
-    "01_acme_clean.pdf": {
+    "acme_2026-11-05.pdf": {
       "document_type": "invoice",
       "vendor_name": "Acme Packaging Pvt Ltd",
       "vendor_tax_id": "06AAACA0001A1Z1",
@@ -41,7 +41,7 @@
       },
       "notes": "Line 2 amount (200 x 450.00) is printed as 90,000.00, which is correct, but the line amounts are reported as printed. Amount in words reads Two Lakh Twelve Thousand Four Hundred."
     },
-    "02_brightline_tax_inclusive.pdf": {
+    "brightline_2026-11-02.pdf": {
       "document_type": "invoice",
       "vendor_name": "Brightline Logistics LLP",
       "vendor_tax_id": "07AAAFB0002B1ZP",
@@ -72,7 +72,7 @@
       },
       "notes": "Single service line with no quantity, unit price or amount. Only a GST-inclusive total is printed; no subtotal or tax amount shown."
     },
-    "03_sharma_scan.pdf": {
+    "sharma_2026-10-28.pdf": {
       "document_type": "invoice",
       "vendor_name": "SHARMA OFFICE SUPPLIES",
       "vendor_tax_id": "06AAAPS0003S1ZP",
@@ -109,7 +109,7 @@
       },
       "notes": null
     },
-    "04_zenith_october.pdf": {
+    "zenith_2026-10-31.pdf": {
       "document_type": "invoice",
       "vendor_name": "Zenith Facility Services Pvt Ltd",
       "vendor_tax_id": "06AAACZ0005Z1ZT",
@@ -140,7 +140,7 @@
       },
       "notes": "Amount in words reads \"One Lakh Eighteen Thousand\", matching the printed grand total."
     },
-    "05_zenith_over_balance.pdf": {
+    "zenith_2026-11-14.pdf": {
       "document_type": "invoice",
       "vendor_name": "Zenith Facility Services Pvt Ltd",
       "vendor_tax_id": "06AAACZ0005Z1ZT",
@@ -177,7 +177,7 @@
       },
       "notes": "Amount in words reads Two Lakh Eighty Three Thousand Two Hundred, which matches the printed grand total."
     },
-    "06_corelight_freight.pdf": {
+    "corelight_2026-11-06.pdf": {
       "document_type": "invoice",
       "vendor_name": "Corelight Electricals Pvt Ltd",
       "vendor_tax_id": "27AAACC0004C1ZO",
@@ -214,7 +214,7 @@
       },
       "notes": null
     },
-    "07_corelight_price_hike.pdf": {
+    "corelight_2026-11-10.pdf": {
       "document_type": "invoice",
       "vendor_name": "Corelight Electricals Pvt Ltd",
       "vendor_tax_id": "27AAACC0004C1ZO",
@@ -245,7 +245,7 @@
       },
       "notes": null
     },
-    "08_acme_near_duplicate.pdf": {
+    "acme_2026-10-03.pdf": {
       "document_type": "invoice",
       "vendor_name": "Acme Packaging Pvt Ltd",
       "vendor_tax_id": "06AAACA0001A1Z1",
@@ -276,7 +276,7 @@
       },
       "notes": null
     },
-    "09_sharma_no_po.pdf": {
+    "sharma_2026-11-08.pdf": {
       "document_type": "invoice",
       "vendor_name": "SHARMA OFFICE SUPPLIES",
       "vendor_tax_id": "06AAAPS0003S1ZP",
@@ -307,7 +307,7 @@
       },
       "notes": "The printed GST of 35,100 does not equal 18% of the subtotal 1,95,000, which would be 35,100 only if correct; values are reported as printed. No PO reference is printed."
     },
-    "10_corelight_damaged_scan.pdf": {
+    "corelight_2026-11-11.pdf": {
       "document_type": "invoice",
       "vendor_name": "Corelight Electricals Pvt Ltd",
       "vendor_tax_id": "27AAACC0004C1ZO",
@@ -338,7 +338,7 @@
       },
       "notes": "The Grand Total amount is covered by a black ink blot and is unreadable. The Doc. No. field is blank, so there is no invoice number."
     },
-    "11_acme_name_variant.pdf": {
+    "acme_2026-11-12.pdf": {
       "document_type": "invoice",
       "vendor_name": "ACME PACKAGING PRIVATE LIMITED",
       "vendor_tax_id": null,
@@ -369,7 +369,7 @@
       },
       "notes": "Amount in words reads Fifty Nine Thousand, matching the printed total. The only GSTIN printed belongs to the billed-to party, so vendor tax ID is null."
     },
-    "12_brightline_bad_sum.pdf": {
+    "brightline_2026-11-14.pdf": {
       "document_type": "invoice",
       "vendor_name": "Brightline Logistics LLP",
       "vendor_tax_id": "07AAAFB0002B1ZP",
@@ -406,7 +406,7 @@
       },
       "notes": null
     },
-    "13_unknown_vendor.pdf": {
+    "quickfix_2026-11-09.pdf": {
       "document_type": "invoice",
       "vendor_name": "QUICKFIX HARDWARE CO.",
       "vendor_tax_id": "06AAAFQ0091Q1Z0",

@@ -16,27 +16,27 @@ and finding codes.
 
 | # | File | Expected | Got | Owner | PO | PO match | Warnings and failures | Result |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 01_acme_clean.pdf | APPROVE | APPROVE | none | PO-2231 | explicit_verified | - | PASS |
-| 2 | 02_brightline_tax_inclusive.pdf | APPROVE | APPROVE | none | PO-2240 | explicit_verified | - | PASS |
-| 3 | 03_sharma_scan.pdf | APPROVE | APPROVE | none | PO-2252 | explicit_verified | - | PASS |
-| 4 | 04_zenith_october.pdf | APPROVE | APPROVE | none | PO-2260 | explicit_verified | - | PASS |
-| 5 | 05_zenith_over_balance.pdf | REVIEW | REVIEW | procurement | PO-2260 | explicit_verified | LINE_NOT_ON_PO, PO_BALANCE | PASS |
-| 6 | 06_corelight_freight.pdf | APPROVE | APPROVE | none | PO-2275 | explicit_verified | LINE_NOT_ON_PO, PO_BALANCE | PASS |
-| 7 | 07_corelight_price_hike.pdf | REVIEW | REVIEW | procurement | PO-2281 | explicit_verified | PO_BALANCE, PRICE_VARIANCE | PASS |
-| 8 | 08_acme_near_duplicate.pdf | REVIEW | REVIEW | ap | PO-2219 | explicit_verified | DUPLICATE_PROBABLE | PASS |
-| 9 | 09_sharma_no_po.pdf | REVIEW | REVIEW | ap | PO-2290 | implied_single | PO_IMPLIED | PASS |
-| 10 | 10_corelight_damaged_scan.pdf | REVIEW | REVIEW | vendor | PO-2296 | explicit_verified | DUPLICATE_CHECK_PARTIAL, REQUIRED_FIELDS | PASS |
-| 11 | 11_acme_name_variant.pdf | APPROVE | APPROVE | none | PO-2219 | explicit_verified | - | PASS |
-| 12 | 12_brightline_bad_sum.pdf | REVIEW | REVIEW | vendor | PO-2301 | explicit_verified | TOTALS | PASS |
-| 13 | 13_unknown_vendor.pdf | REJECT | REJECT | procurement | - | not_found | PO_NOT_FOUND, VENDOR_NOT_FOUND | PASS |
+| 1 | acme_2026-11-05.pdf | APPROVE | APPROVE | none | PO-2231 | explicit_verified | - | PASS |
+| 2 | brightline_2026-11-02.pdf | APPROVE | APPROVE | none | PO-2240 | explicit_verified | - | PASS |
+| 3 | sharma_2026-10-28.pdf | APPROVE | APPROVE | none | PO-2252 | explicit_verified | - | PASS |
+| 4 | zenith_2026-10-31.pdf | APPROVE | APPROVE | none | PO-2260 | explicit_verified | - | PASS |
+| 5 | zenith_2026-11-14.pdf | REVIEW | REVIEW | procurement | PO-2260 | explicit_verified | LINE_NOT_ON_PO, PO_BALANCE | PASS |
+| 6 | corelight_2026-11-06.pdf | APPROVE | APPROVE | none | PO-2275 | explicit_verified | LINE_NOT_ON_PO, PO_BALANCE | PASS |
+| 7 | corelight_2026-11-10.pdf | REVIEW | REVIEW | procurement | PO-2281 | explicit_verified | PO_BALANCE, PRICE_VARIANCE | PASS |
+| 8 | acme_2026-10-03.pdf | REVIEW | REVIEW | ap | PO-2219 | explicit_verified | DUPLICATE_PROBABLE | PASS |
+| 9 | sharma_2026-11-08.pdf | REVIEW | REVIEW | ap | PO-2290 | implied_single | PO_IMPLIED | PASS |
+| 10 | corelight_2026-11-11.pdf | REVIEW | REVIEW | vendor | PO-2296 | explicit_verified | DUPLICATE_CHECK_PARTIAL, REQUIRED_FIELDS | PASS |
+| 11 | acme_2026-11-12.pdf | APPROVE | APPROVE | none | PO-2219 | explicit_verified | - | PASS |
+| 12 | brightline_2026-11-14.pdf | REVIEW | REVIEW | vendor | PO-2301 | explicit_verified | TOTALS | PASS |
+| 13 | quickfix_2026-11-09.pdf | REJECT | REJECT | procurement | - | not_found | PO_NOT_FOUND, VENDOR_NOT_FOUND | PASS |
 
 ## The 3 sequences (no reset between steps; the last step is checked)
 
 | Sequence | Steps | Expected last | Got | Warnings and failures (last step) | Result |
 |---|---|---|---|---|---|
-| same_file_twice | 01_acme_clean.pdf → APPROVE (read live by the AI model)<br>01_acme_clean.pdf → REJECT (reused: identical file) | REJECT | REJECT | DUPLICATE_EXACT, PO_BALANCE | PASS |
-| october_then_over_balance | 04_zenith_october.pdf → APPROVE (read live by the AI model)<br>05_zenith_over_balance.pdf → REVIEW (read live by the AI model) | REVIEW | REVIEW | LINE_NOT_ON_PO, PO_BALANCE | PASS |
-| name_variant_then_near_duplicate | 11_acme_name_variant.pdf → APPROVE (read live by the AI model)<br>08_acme_near_duplicate.pdf → REVIEW (read live by the AI model) | REVIEW | REVIEW | DUPLICATE_PROBABLE, PO_BALANCE | PASS |
+| same_file_twice | acme_2026-11-05.pdf → APPROVE (read live by the AI model)<br>acme_2026-11-05.pdf → REJECT (reused: identical file) | REJECT | REJECT | DUPLICATE_EXACT, PO_BALANCE | PASS |
+| october_then_over_balance | zenith_2026-10-31.pdf → APPROVE (read live by the AI model)<br>zenith_2026-11-14.pdf → REVIEW (read live by the AI model) | REVIEW | REVIEW | LINE_NOT_ON_PO, PO_BALANCE | PASS |
+| name_variant_then_near_duplicate | acme_2026-11-12.pdf → APPROVE (read live by the AI model)<br>acme_2026-10-03.pdf → REVIEW (read live by the AI model) | REVIEW | REVIEW | DUPLICATE_PROBABLE, PO_BALANCE | PASS |
 
 Not covered here: this check calls the stage functions directly. Running the same
 thing over HTTP and in the browser belongs to Milestones 4 and 5.

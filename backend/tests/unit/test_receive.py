@@ -10,7 +10,7 @@ from app.models import Run
 from app.pipeline.receive import ReceiveError, receive
 from app.seed import seed_database
 
-SAMPLE = config.INVOICE_DIR / "01_acme_clean.pdf"
+SAMPLE = config.INVOICE_DIR / "acme_2026-11-05.pdf"
 
 
 def test_accepts_a_sample_invoice_and_renders_its_page(session, tmp_path):

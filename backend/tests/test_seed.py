@@ -104,7 +104,7 @@ def test_reset_undoes_changes_wipes_runs_and_keeps_saved_extractions(session):
     seed_database(session)
 
     # Simulate a demo: a run approved an invoice and moved a PO balance.
-    run = Run(file_name="01_acme_clean.pdf", file_hash="a" * 64, status="completed", decision="APPROVE")
+    run = Run(file_name="acme_2026-11-05.pdf", file_hash="a" * 64, status="completed", decision="APPROVE")
     session.add(run)
     session.commit()
     session.add(StageEvent(run_id=run.id, stage="receive", status="done", duration_ms=3))

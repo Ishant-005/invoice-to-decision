@@ -8,8 +8,8 @@ def test_samples_lists_the_13_invoices_without_their_expected_outcome(api):
 
     assert [s["case"] for s in samples] == list(range(1, 14))
     assert samples[0] == {
-        "case": 1, "file": "01_acme_clean.pdf", "scanned": False,
-        "description": "Acme Packaging: corrugated boxes and bubble wrap, quoting PO-2231"}
+        "case": 1, "file": "acme_2026-11-05.pdf", "scanned": False,
+        "description": "Acme Packaging: corrugated boxes and bubble wrap"}
     assert all(set(s) == {"case", "file", "description", "scanned"} for s in samples)
     assert [s["case"] for s in samples if s["scanned"]] == [3, 8, 10]
 
@@ -46,9 +46,9 @@ def test_rules_endpoint_returns_the_thresholds_in_force(api):
 
 
 def test_runs_list_is_newest_first_and_can_be_filtered(api):
-    first = submit(api, "01_acme_clean.pdf")  # APPROVE, Acme
-    second = submit(api, "07_corelight_price_hike.pdf")  # REVIEW, Corelight
-    third = submit(api, "13_unknown_vendor.pdf")  # REJECT, not in the vendor master
+    first = submit(api, "acme_2026-11-05.pdf")  # APPROVE, Acme
+    second = submit(api, "corelight_2026-11-10.pdf")  # REVIEW, Corelight
+    third = submit(api, "quickfix_2026-11-09.pdf")  # REJECT, not in the vendor master
 
     def ids(query: str = "") -> list[str]:
         return [run["id"] for run in api.client.get(f"/api/runs{query}").json()["runs"]]
@@ -81,10 +81,10 @@ def test_stats_count_runs_by_outcome_and_add_up_the_approved_value(api):
     assert empty["processed"] == 0 and empty["auto_approved_percent"] is None
     assert empty["value_approved_gross"] == "0" and empty["seeded_invoices"] == 2
 
-    submit(api, "01_acme_clean.pdf")  # APPROVE: 1,80,000 before tax, 2,12,400 with tax
-    submit(api, "13_unknown_vendor.pdf")  # REJECT
-    submit(api, "07_corelight_price_hike.pdf")  # REVIEW, left waiting
-    review = submit(api, "09_sharma_no_po.pdf")  # REVIEW, then approved by a person
+    submit(api, "acme_2026-11-05.pdf")  # APPROVE: 1,80,000 before tax, 2,12,400 with tax
+    submit(api, "quickfix_2026-11-09.pdf")  # REJECT
+    submit(api, "corelight_2026-11-10.pdf")  # REVIEW, left waiting
+    review = submit(api, "sharma_2026-11-08.pdf")  # REVIEW, then approved by a person
     api.client.post(f"/api/runs/{review['id']}/resolve",
                     json={"action": "approve", "comment": "ok"})
 
@@ -98,7 +98,7 @@ def test_stats_count_runs_by_outcome_and_add_up_the_approved_value(api):
 
 
 def test_a_sample_preview_is_a_png_and_an_unknown_sample_is_404(api):
-    response = api.client.get("/api/samples/01_acme_clean.pdf/preview.png")
+    response = api.client.get("/api/samples/acme_2026-11-05.pdf/preview.png")
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/png"
     assert response.content.startswith(b"\x89PNG")
@@ -107,7 +107,7 @@ def test_a_sample_preview_is_a_png_and_an_unknown_sample_is_404(api):
 
 
 def test_a_probable_duplicate_links_to_the_earlier_invoice_with_its_reading_and_page(api):
-    run = submit(api, "08_acme_near_duplicate.pdf")
+    run = submit(api, "acme_2026-10-03.pdf")
     rules = next(s for s in run["stages"] if s["stage"] == "rules")
     link = rules["result"]["duplicates"][0]
 
@@ -125,7 +125,7 @@ def test_a_probable_duplicate_links_to_the_earlier_invoice_with_its_reading_and_
 
 
 def test_an_invoice_from_a_run_can_be_fetched_and_an_unknown_one_is_404(api):
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
     # The two seeded invoices are numbers 1 and 2, so the first run's invoice is number 3.
     invoice = api.client.get("/api/invoices/3").json()
     assert invoice["run_id"] == run["id"]

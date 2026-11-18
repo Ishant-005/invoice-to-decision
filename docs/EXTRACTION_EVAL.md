@@ -55,19 +55,19 @@ None.
 
 | File | Scan | Values correct | Seconds | Input tokens | Output tokens |
 |---|---|---|---|---|---|
-| 01_acme_clean.pdf | no | 22/22 | 3.5 | 5509 | 458 |
-| 02_brightline_tax_inclusive.pdf | no | 18/18 | 3.9 | 5280 | 386 |
-| 03_sharma_scan.pdf | yes | 22/22 | 3.2 | 4937 | 363 |
-| 04_zenith_october.pdf | no | 18/18 | 3.4 | 5496 | 393 |
-| 05_zenith_over_balance.pdf | no | 22/22 | 4.0 | 5535 | 442 |
-| 06_corelight_freight.pdf | no | 22/22 | 4.2 | 5713 | 383 |
-| 07_corelight_price_hike.pdf | no | 18/18 | 3.2 | 5670 | 345 |
-| 08_acme_near_duplicate.pdf | yes | 18/18 | 3.4 | 4937 | 348 |
-| 09_sharma_no_po.pdf | no | 18/18 | 4.0 | 5357 | 383 |
-| 10_corelight_damaged_scan.pdf | yes | 18/18 | 3.6 | 4937 | 369 |
-| 11_acme_name_variant.pdf | no | 18/18 | 4.2 | 5463 | 397 |
-| 12_brightline_bad_sum.pdf | no | 22/22 | 3.2 | 5326 | 379 |
-| 13_unknown_vendor.pdf | no | 22/22 | 5.0 | 5372 | 403 |
+| acme_2026-11-05.pdf | no | 22/22 | 3.5 | 5509 | 458 |
+| brightline_2026-11-02.pdf | no | 18/18 | 3.9 | 5280 | 386 |
+| sharma_2026-10-28.pdf | yes | 22/22 | 3.2 | 4937 | 363 |
+| zenith_2026-10-31.pdf | no | 18/18 | 3.4 | 5496 | 393 |
+| zenith_2026-11-14.pdf | no | 22/22 | 4.0 | 5535 | 442 |
+| corelight_2026-11-06.pdf | no | 22/22 | 4.2 | 5713 | 383 |
+| corelight_2026-11-10.pdf | no | 18/18 | 3.2 | 5670 | 345 |
+| acme_2026-10-03.pdf | yes | 18/18 | 3.4 | 4937 | 348 |
+| sharma_2026-11-08.pdf | no | 18/18 | 4.0 | 5357 | 383 |
+| corelight_2026-11-11.pdf | yes | 18/18 | 3.6 | 4937 | 369 |
+| acme_2026-11-12.pdf | no | 18/18 | 4.2 | 5463 | 397 |
+| brightline_2026-11-14.pdf | no | 22/22 | 3.2 | 5326 | 379 |
+| quickfix_2026-11-09.pdf | no | 22/22 | 5.0 | 5372 | 403 |
 | seed_acme_inv1017.pdf | no | 18/18 | 3.5 | 5482 | 376 |
 | seed_zenith_zfs0911.pdf | no | 18/18 | 4.1 | 5497 | 391 |
 
@@ -89,9 +89,9 @@ and the run after both stay in this table.
 
 Mismatches in the run of 2026-11-18 15:23 UTC (prompt v1, effort low):
 
-- `03_sharma_scan.pdf` — **vendor_name**: expected `Sharma Office Supplies`, got `SHARMA OFFICE SUPPLIES`
-- `09_sharma_no_po.pdf` — **vendor_name**: expected `Sharma Office Supplies`, got `SHARMA OFFICE SUPPLIES`
-- `13_unknown_vendor.pdf` — **vendor_name**: expected `Quickfix Hardware Co.`, got `QUICKFIX HARDWARE CO.`
+- `sharma_2026-10-28.pdf` — **vendor_name**: expected `Sharma Office Supplies`, got `SHARMA OFFICE SUPPLIES`
+- `sharma_2026-11-08.pdf` — **vendor_name**: expected `Sharma Office Supplies`, got `SHARMA OFFICE SUPPLIES`
+- `quickfix_2026-11-09.pdf` — **vendor_name**: expected `Quickfix Hardware Co.`, got `QUICKFIX HARDWARE CO.`
 
 ## What this does and does not show
 

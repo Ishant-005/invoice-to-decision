@@ -280,19 +280,19 @@ decisions assume a fresh reset before each case unless stated.
 
 | # | File | Vendor / PO | Invoice no., date | Content | What is messy | Expected |
 |---|---|---|---|---|---|---|
-| 1 | 01_acme_clean.pdf | V-001 / PO-2231 | INV-1042, 2026-11-05 | Both PO lines in full. Subtotal 1,80,000; CGST 16,200 + SGST 16,200; total 2,12,400 | Nothing. Happy path | APPROVE |
-| 2 | 02_brightline_tax_inclusive.pdf | V-002 / PO-2240 | BL/26-27/0193, 2026-11-02 | One bundled line. Only "Total ₹1,18,000 inclusive of GST @ 18%" | Bundled, tax embedded | APPROVE (pre-tax derived as 1,00,000) |
-| 3 | 03_sharma_scan.pdf | V-003 / PO-2252 | SOS-778, 2026-10-28 | Both lines. Subtotal 72,800; GST 13,104; total 85,904 | Scanned image, slightly skewed | APPROVE |
-| 4 | 04_zenith_october.pdf | V-005 / PO-2260 | ZFS-0934, 2026-10-31 | Housekeeping October 1,00,000; GST 18,000; total 1,18,000 | Part-invoice on a split PO; same amount as last month | APPROVE; PO billed becomes 2,00,000. Must NOT be flagged as a duplicate of ZFS-0911 |
-| 5 | 05_zenith_over_balance.pdf | V-005 / PO-2260 | ZFS-0958, 2026-11-14 | Housekeeping November 1,00,000 + "Additional deep cleaning" 1,40,000. Subtotal 2,40,000; GST 43,200; total 2,83,200 | Pushes the PO over its value; extra line not on PO | REVIEW, owner procurement (in either order relative to case 4) |
-| 6 | 06_corelight_freight.pdf | V-004 / PO-2275 | CE-5521, 2026-11-06 | 100 × 1,500 = 1,50,000 + Freight 1,200. Subtotal 1,51,200; IGST 27,216; total 1,78,416 | Over PO by 1,200 (0.8%) | APPROVE with tolerance note |
-| 7 | 07_corelight_price_hike.pdf | V-004 / PO-2281 | CE-5547, 2026-11-10 | 60 × 2,700 = 1,62,000; IGST 29,160; total 1,91,160 | Unit price 8% above PO | REVIEW, owner procurement |
-| 8 | 08_acme_near_duplicate.pdf | V-001 / PO-2219 | INV-1017-A, 2026-10-03 | Same as seeded INV-1017: 1000 cartons, 1,00,000; GST 18,000; total 1,18,000. Rendered as a scan | Altered number, different file, same bill. The PO still has room, so only duplicate detection can catch it | REVIEW, DUPLICATE_PROBABLE, linked to INV-1017 |
-| 9 | 09_sharma_no_po.pdf | V-003 / (PO-2290 implied) | SOS-801, 2026-11-08 | "Ergonomic office chairs (mesh back), 30 nos" @ 6,500. Subtotal 1,95,000; GST 35,100; total 2,30,100. No PO printed | PO implied | REVIEW, implied_single, suggests PO-2290 |
-| 10 | 10_corelight_damaged_scan.pdf | V-004 / PO-2296 | number blank, 2026-11-11 | 200 × 1,100 = 2,20,000; IGST 39,600; total 2,59,600 | Scan; invoice number field empty; total covered by an opaque stain | REVIEW, owner vendor. invoice_number and total must be null, not guessed |
-| 11 | 11_acme_name_variant.pdf | V-001 / PO-2219 | INV-1058, 2026-11-12 | 500 cartons @ 100 = 50,000; GST 9,000; total 59,000. Vendor printed as "ACME PACKAGING PRIVATE LIMITED", no GSTIN | Name variant | APPROVE via cleaned-name match |
-| 12 | 12_brightline_bad_sum.pdf | V-002 / PO-2301 | BL/26-27/0214, 2026-11-14 | Lines 50,000 + 30,000; subtotal 80,000; GST 14,400; total printed 95,400 (correct is 94,400) | Totals do not add up | REVIEW, TOTALS, owner vendor |
-| 13 | 13_unknown_vendor.pdf | Quickfix Hardware Co. / "PO-9999" | QH-0091, 2026-11-09 | Any plausible content | Vendor not in master | REJECT |
+| 1 | acme_2026-11-05.pdf | V-001 / PO-2231 | INV-1042, 2026-11-05 | Both PO lines in full. Subtotal 1,80,000; CGST 16,200 + SGST 16,200; total 2,12,400 | Nothing. Happy path | APPROVE |
+| 2 | brightline_2026-11-02.pdf | V-002 / PO-2240 | BL/26-27/0193, 2026-11-02 | One bundled line. Only "Total ₹1,18,000 inclusive of GST @ 18%" | Bundled, tax embedded | APPROVE (pre-tax derived as 1,00,000) |
+| 3 | sharma_2026-10-28.pdf | V-003 / PO-2252 | SOS-778, 2026-10-28 | Both lines. Subtotal 72,800; GST 13,104; total 85,904 | Scanned image, slightly skewed | APPROVE |
+| 4 | zenith_2026-10-31.pdf | V-005 / PO-2260 | ZFS-0934, 2026-10-31 | Housekeeping October 1,00,000; GST 18,000; total 1,18,000 | Part-invoice on a split PO; same amount as last month | APPROVE; PO billed becomes 2,00,000. Must NOT be flagged as a duplicate of ZFS-0911 |
+| 5 | zenith_2026-11-14.pdf | V-005 / PO-2260 | ZFS-0958, 2026-11-14 | Housekeeping November 1,00,000 + "Additional deep cleaning" 1,40,000. Subtotal 2,40,000; GST 43,200; total 2,83,200 | Pushes the PO over its value; extra line not on PO | REVIEW, owner procurement (in either order relative to case 4) |
+| 6 | corelight_2026-11-06.pdf | V-004 / PO-2275 | CE-5521, 2026-11-06 | 100 × 1,500 = 1,50,000 + Freight 1,200. Subtotal 1,51,200; IGST 27,216; total 1,78,416 | Over PO by 1,200 (0.8%) | APPROVE with tolerance note |
+| 7 | corelight_2026-11-10.pdf | V-004 / PO-2281 | CE-5547, 2026-11-10 | 60 × 2,700 = 1,62,000; IGST 29,160; total 1,91,160 | Unit price 8% above PO | REVIEW, owner procurement |
+| 8 | acme_2026-10-03.pdf | V-001 / PO-2219 | INV-1017-A, 2026-10-03 | Same as seeded INV-1017: 1000 cartons, 1,00,000; GST 18,000; total 1,18,000. Rendered as a scan | Altered number, different file, same bill. The PO still has room, so only duplicate detection can catch it | REVIEW, DUPLICATE_PROBABLE, linked to INV-1017 |
+| 9 | sharma_2026-11-08.pdf | V-003 / (PO-2290 implied) | SOS-801, 2026-11-08 | "Ergonomic office chairs (mesh back), 30 nos" @ 6,500. Subtotal 1,95,000; GST 35,100; total 2,30,100. No PO printed | PO implied | REVIEW, implied_single, suggests PO-2290 |
+| 10 | corelight_2026-11-11.pdf | V-004 / PO-2296 | number blank, 2026-11-11 | 200 × 1,100 = 2,20,000; IGST 39,600; total 2,59,600 | Scan; invoice number field empty; total covered by an opaque stain | REVIEW, owner vendor. invoice_number and total must be null, not guessed |
+| 11 | acme_2026-11-12.pdf | V-001 / PO-2219 | INV-1058, 2026-11-12 | 500 cartons @ 100 = 50,000; GST 9,000; total 59,000. Vendor printed as "ACME PACKAGING PRIVATE LIMITED", no GSTIN | Name variant | APPROVE via cleaned-name match |
+| 12 | brightline_2026-11-14.pdf | V-002 / PO-2301 | BL/26-27/0214, 2026-11-14 | Lines 50,000 + 30,000; subtotal 80,000; GST 14,400; total printed 95,400 (correct is 94,400) | Totals do not add up | REVIEW, TOTALS, owner vendor |
+| 13 | quickfix_2026-11-09.pdf | Quickfix Hardware Co. / "PO-9999" | QH-0091, 2026-11-09 | Any plausible content | Vendor not in master | REJECT |
 
 Sequence cases to test as well:
 

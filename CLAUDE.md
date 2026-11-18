@@ -65,7 +65,7 @@ Useful one-offs:
 - The API tests only (extraction stood in, no API key): `cd backend && uv run pytest tests/integration -q`
 - The five screens: `/` dashboard, `/new` new run, `/runs/<id>` run view, `/purchase-orders`, `/how-it-works` (frontend code in `frontend/src/pages`, run-view parts in `frontend/src/components/run`)
 - Health check: `curl http://localhost:8000/api/health`
-- Run a sample over HTTP (**live API call**): `curl -F sample=01_acme_clean.pdf http://localhost:8000/api/runs`, then `curl http://localhost:8000/api/runs/<id>`
+- Run a sample over HTTP (**live API call**): `curl -F sample=acme_2026-11-05.pdf http://localhost:8000/api/runs`, then `curl http://localhost:8000/api/runs/<id>`
 - After a change to `backend/app/models.py`, delete `var/app.db`; it is re-created and seeded on startup (there are no migrations)
 - Reset demo data on a running server: `curl -X POST http://localhost:8000/api/demo/reset`
 - CI status: `gh run list --limit 3`

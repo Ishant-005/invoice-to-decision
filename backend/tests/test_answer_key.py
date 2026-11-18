@@ -25,7 +25,7 @@ def test_sequence_matches_the_answer_key(session, sequence):
 def test_differences_reports_a_wrong_decision_and_a_missing_finding(session):
     """Guards the comparison itself: it must not pass everything."""
     books = fresh_books(session)
-    result = run_case(books, "01_acme_clean.pdf")
+    result = run_case(books, "acme_2026-11-05.pdf")
     wrong = {"decision": "REJECT", "finding_codes": ["TOTALS"], "absent_codes": []}
     assert differences(result, wrong, books) == [
         "decision: expected REJECT, got APPROVE", "finding TOTALS expected but not raised"]

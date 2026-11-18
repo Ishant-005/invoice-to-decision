@@ -273,7 +273,8 @@ def main() -> None:
             options = definition["print"]
             if options.get("scan"):
                 # Each file gets its own random stream, so adding a file never changes another.
-                rng = random.Random(f"{RANDOM_SEED}:{definition['file']}")
+                # 'scan_seed' pins that stream, so renaming a file does not change its bytes.
+                rng = random.Random(f"{RANDOM_SEED}:{options.get('scan_seed', definition['file'])}")
                 pdf = scanify(pdf, rng, total_box if "stained_total" in options else None)
 
             if "seeded" in definition:

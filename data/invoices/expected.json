@@ -3,8 +3,8 @@
   "invoices": [
     {
       "case": 1,
-      "file": "01_acme_clean.pdf",
-      "description": "Acme Packaging: corrugated boxes and bubble wrap, quoting PO-2231",
+      "file": "acme_2026-11-05.pdf",
+      "description": "Acme Packaging: corrugated boxes and bubble wrap",
       "layout": "A",
       "scanned": false,
       "truth": {
@@ -51,7 +51,7 @@
     },
     {
       "case": 2,
-      "file": "02_brightline_tax_inclusive.pdf",
+      "file": "brightline_2026-11-02.pdf",
       "description": "Brightline Logistics: October freight as a single tax-inclusive amount",
       "layout": "B",
       "scanned": false,
@@ -95,7 +95,7 @@
     },
     {
       "case": 3,
-      "file": "03_sharma_scan.pdf",
+      "file": "sharma_2026-10-28.pdf",
       "description": "Sharma Office Supplies: paper and toner, a scanned bill",
       "layout": "C",
       "scanned": true,
@@ -143,7 +143,7 @@
     },
     {
       "case": 4,
-      "file": "04_zenith_october.pdf",
+      "file": "zenith_2026-10-31.pdf",
       "description": "Zenith Facility Services: housekeeping for October",
       "layout": "A",
       "scanned": false,
@@ -189,7 +189,7 @@
     },
     {
       "case": 5,
-      "file": "05_zenith_over_balance.pdf",
+      "file": "zenith_2026-11-14.pdf",
       "description": "Zenith Facility Services: housekeeping for November plus additional deep cleaning",
       "layout": "A",
       "scanned": false,
@@ -241,7 +241,7 @@
     },
     {
       "case": 6,
-      "file": "06_corelight_freight.pdf",
+      "file": "corelight_2026-11-06.pdf",
       "description": "Corelight Electricals: LED panel lights with a freight charge",
       "layout": "D",
       "scanned": false,
@@ -293,7 +293,7 @@
     },
     {
       "case": 7,
-      "file": "07_corelight_price_hike.pdf",
+      "file": "corelight_2026-11-10.pdf",
       "description": "Corelight Electricals: MCB distribution boards",
       "layout": "D",
       "scanned": false,
@@ -339,8 +339,8 @@
     },
     {
       "case": 8,
-      "file": "08_acme_near_duplicate.pdf",
-      "description": "Acme Packaging: 1,000 shipping cartons, a scanned copy",
+      "file": "acme_2026-10-03.pdf",
+      "description": "Acme Packaging: 1,000 shipping cartons, a scanned bill",
       "layout": "A",
       "scanned": true,
       "truth": {
@@ -387,8 +387,8 @@
     },
     {
       "case": 9,
-      "file": "09_sharma_no_po.pdf",
-      "description": "Sharma Office Supplies: office chairs, no purchase order quoted",
+      "file": "sharma_2026-11-08.pdf",
+      "description": "Sharma Office Supplies: ergonomic office chairs",
       "layout": "C",
       "scanned": false,
       "truth": {
@@ -429,8 +429,8 @@
     },
     {
       "case": 10,
-      "file": "10_corelight_damaged_scan.pdf",
-      "description": "Corelight Electricals: copper cable, a damaged scan",
+      "file": "corelight_2026-11-11.pdf",
+      "description": "Corelight Electricals: copper cable, a scanned bill",
       "layout": "D",
       "scanned": true,
       "truth": {
@@ -474,8 +474,8 @@
     },
     {
       "case": 11,
-      "file": "11_acme_name_variant.pdf",
-      "description": "Acme Packaging: 500 shipping cartons, company name printed in full, no GSTIN",
+      "file": "acme_2026-11-12.pdf",
+      "description": "Acme Packaging: 500 shipping cartons",
       "layout": "A",
       "scanned": false,
       "truth": {
@@ -517,7 +517,7 @@
     },
     {
       "case": 12,
-      "file": "12_brightline_bad_sum.pdf",
+      "file": "brightline_2026-11-14.pdf",
       "description": "Brightline Logistics: November warehouse-to-store transfers in two parts",
       "layout": "B",
       "scanned": false,
@@ -567,7 +567,7 @@
     },
     {
       "case": 13,
-      "file": "13_unknown_vendor.pdf",
+      "file": "quickfix_2026-11-09.pdf",
       "description": "Quickfix Hardware Co.: hinges and cordless drills",
       "layout": "C",
       "scanned": false,
@@ -621,8 +621,8 @@
     {
       "name": "same_file_twice",
       "steps": [
-        "01_acme_clean.pdf",
-        "01_acme_clean.pdf"
+        "acme_2026-11-05.pdf",
+        "acme_2026-11-05.pdf"
       ],
       "expected_last": {
         "decision": "REJECT",
@@ -635,8 +635,8 @@
     {
       "name": "october_then_over_balance",
       "steps": [
-        "04_zenith_october.pdf",
-        "05_zenith_over_balance.pdf"
+        "zenith_2026-10-31.pdf",
+        "zenith_2026-11-14.pdf"
       ],
       "expected_last": {
         "decision": "REVIEW",
@@ -651,8 +651,8 @@
     {
       "name": "name_variant_then_near_duplicate",
       "steps": [
-        "11_acme_name_variant.pdf",
-        "08_acme_near_duplicate.pdf"
+        "acme_2026-11-12.pdf",
+        "acme_2026-10-03.pdf"
       ],
       "expected_last": {
         "decision": "REVIEW",

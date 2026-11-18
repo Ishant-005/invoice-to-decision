@@ -17,7 +17,7 @@ from tests.integration.conftest import flagged, poll, purchase_order, stage, sub
 
 
 def test_a_run_is_accepted_at_once_and_can_be_polled_to_completion(api):
-    response = api.client.post("/api/runs", data={"sample": "01_acme_clean.pdf"})
+    response = api.client.post("/api/runs", data={"sample": "acme_2026-11-05.pdf"})
     assert response.status_code == 202
     created = response.json()
     assert created["status"] == "queued"
@@ -37,7 +37,7 @@ def test_a_run_is_accepted_at_once_and_can_be_polled_to_completion(api):
 
 
 def test_a_finished_run_shows_six_stages_in_order_with_measured_durations(api):
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
 
     assert [s["stage"] for s in run["stages"]] == list(STAGES)
     assert all(s["status"] == "done" for s in run["stages"])
@@ -70,7 +70,7 @@ def test_stage_rows_are_written_while_the_run_is_in_progress(api):
                               for e in session.exec(select(StageEvent))}
 
     api.reader.during_call = look_at_the_database
-    submit(api, "01_acme_clean.pdf")
+    submit(api, "acme_2026-11-05.pdf")
 
     assert seen["run_status"] == "running"
     assert set(seen["stages"]) == {"receive", "extract"}
@@ -79,14 +79,14 @@ def test_stage_rows_are_written_while_the_run_is_in_progress(api):
 
 
 def test_money_is_sent_as_text_never_as_a_floating_point_number(api):
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
     assert run["gross_amount"] == "212400.00"
     assert run["pretax_amount"] == "180000.00"
     assert purchase_order(api, "PO-2231")["billed_to_date"] == "180000.00"
 
 
 def test_the_page_image_of_a_run_is_served(api):
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
     assert run["pages"] == [f"/api/runs/{run['id']}/pages/1.png"]
 
     image = api.client.get(run["pages"][0])
@@ -97,7 +97,7 @@ def test_the_page_image_of_a_run_is_served(api):
 
 
 def test_an_uploaded_pdf_goes_through_the_same_pipeline(api):
-    pdf = (config.INVOICE_DIR / "02_brightline_tax_inclusive.pdf").read_bytes()
+    pdf = (config.INVOICE_DIR / "brightline_2026-11-02.pdf").read_bytes()
     response = api.client.post(
         "/api/runs", files={"file": ("../../my invoice.pdf", pdf, "application/pdf")})
     assert response.status_code == 202
@@ -132,7 +132,7 @@ def test_an_approval_adds_the_pretax_amount_to_the_po(api):
     before = purchase_order(api, "PO-2231")
     assert (before["billed_to_date"], before["remaining"]) == ("0.00", "180000.00")
 
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
     assert run["decision"] == "APPROVE"
 
     after = purchase_order(api, "PO-2231")
@@ -145,8 +145,8 @@ def test_a_review_or_a_reject_does_not_change_any_po(api):
     balances = {po["id"]: po["billed_to_date"]
                 for po in api.client.get("/api/purchase-orders").json()}
 
-    assert submit(api, "07_corelight_price_hike.pdf")["decision"] == "REVIEW"
-    assert submit(api, "13_unknown_vendor.pdf")["decision"] == "REJECT"
+    assert submit(api, "corelight_2026-11-10.pdf")["decision"] == "REVIEW"
+    assert submit(api, "quickfix_2026-11-09.pdf")["decision"] == "REJECT"
 
     assert balances == {po["id"]: po["billed_to_date"]
                         for po in api.client.get("/api/purchase-orders").json()}
@@ -162,7 +162,7 @@ def resolve(api, run_id: str, **body):
 
 
 def test_approving_a_review_books_the_invoice_against_the_suggested_po(api):
-    run = submit(api, "09_sharma_no_po.pdf")  # no PO printed; PO-2290 is suggested
+    run = submit(api, "sharma_2026-11-08.pdf")  # no PO printed; PO-2290 is suggested
     assert (run["decision"], run["state"]) == ("REVIEW", "awaiting_review")
     assert purchase_order(api, "PO-2290")["billed_to_date"] == "0.00"
 
@@ -181,7 +181,7 @@ def test_approving_a_review_books_the_invoice_against_the_suggested_po(api):
 
 
 def test_a_reviewer_may_approve_an_invoice_that_goes_over_the_po(api):
-    run = submit(api, "05_zenith_over_balance.pdf")
+    run = submit(api, "zenith_2026-11-14.pdf")
     assert run["decision"] == "REVIEW"
 
     assert resolve(api, run["id"], action="approve",
@@ -192,7 +192,7 @@ def test_a_reviewer_may_approve_an_invoice_that_goes_over_the_po(api):
 
 
 def test_rejecting_a_review_leaves_the_po_alone_and_frees_the_invoice_for_resubmission(api):
-    run = submit(api, "07_corelight_price_hike.pdf")
+    run = submit(api, "corelight_2026-11-10.pdf")
 
     response = resolve(api, run["id"], action="reject", comment="Price not agreed.")
 
@@ -202,13 +202,13 @@ def test_rejecting_a_review_leaves_the_po_alone_and_frees_the_invoice_for_resubm
     assert po["invoices"][0]["state"] == "rejected"
     # A rejected invoice does not count as an earlier submission: sending the same
     # file again is not flagged as a duplicate.
-    again = submit(api, "07_corelight_price_hike.pdf")
+    again = submit(api, "corelight_2026-11-10.pdf")
     assert again["decision"] == "REVIEW"
     assert "DUPLICATE_EXACT" not in flagged(again)
 
 
 def test_a_review_needs_a_comment_and_can_only_be_resolved_once(api):
-    run = submit(api, "09_sharma_no_po.pdf")
+    run = submit(api, "sharma_2026-11-08.pdf")
 
     assert resolve(api, run["id"], action="approve").status_code == 422
     assert resolve(api, run["id"], action="approve", comment="   ").status_code == 422
@@ -222,7 +222,7 @@ def test_a_review_needs_a_comment_and_can_only_be_resolved_once(api):
 
 
 def test_a_reviewer_cannot_book_an_invoice_against_another_vendors_po(api):
-    run = submit(api, "09_sharma_no_po.pdf")  # Sharma Office Supplies
+    run = submit(api, "sharma_2026-11-08.pdf")  # Sharma Office Supplies
 
     wrong_vendor = resolve(api, run["id"], action="approve", comment="x", po_id="PO-2231")
     no_such_po = resolve(api, run["id"], action="approve", comment="x", po_id="PO-0000")
@@ -234,7 +234,7 @@ def test_a_reviewer_cannot_book_an_invoice_against_another_vendors_po(api):
 
 
 def test_a_reviewer_can_choose_a_different_po_of_the_same_vendor(api):
-    run = submit(api, "09_sharma_no_po.pdf")  # PO-2290 suggested; PO-2252 is also Sharma's
+    run = submit(api, "sharma_2026-11-08.pdf")  # PO-2290 suggested; PO-2252 is also Sharma's
 
     assert resolve(api, run["id"], action="approve", comment="Belongs to the stationery PO.",
                    po_id="PO-2252").status_code == 200
@@ -245,8 +245,8 @@ def test_a_reviewer_can_choose_a_different_po_of_the_same_vendor(api):
 
 
 def test_only_review_runs_can_be_resolved(api):
-    approved = submit(api, "01_acme_clean.pdf")
-    rejected = submit(api, "13_unknown_vendor.pdf")
+    approved = submit(api, "acme_2026-11-05.pdf")
+    rejected = submit(api, "quickfix_2026-11-09.pdf")
 
     assert resolve(api, approved["id"], action="reject", comment="x").status_code == 409
     assert resolve(api, rejected["id"], action="approve", comment="x").status_code == 409
@@ -271,8 +271,8 @@ def test_sequence_from_the_answer_key(api, sequence):
 
 
 def test_the_same_file_twice_is_rejected_and_not_read_again(api):
-    first = submit(api, "01_acme_clean.pdf")
-    second = submit(api, "01_acme_clean.pdf")
+    first = submit(api, "acme_2026-11-05.pdf")
+    second = submit(api, "acme_2026-11-05.pdf")
 
     assert (first["decision"], second["decision"]) == ("APPROVE", "REJECT")
     assert "DUPLICATE_EXACT" in flagged(second)
@@ -283,10 +283,10 @@ def test_the_same_file_twice_is_rejected_and_not_read_again(api):
 
 
 def test_october_then_over_balance_moves_the_po_only_once(api):
-    assert submit(api, "04_zenith_october.pdf")["decision"] == "APPROVE"
+    assert submit(api, "zenith_2026-10-31.pdf")["decision"] == "APPROVE"
     assert purchase_order(api, "PO-2260")["billed_to_date"] == "200000.00"
 
-    over = submit(api, "05_zenith_over_balance.pdf")
+    over = submit(api, "zenith_2026-11-14.pdf")
 
     assert over["decision"] == "REVIEW"
     assert "by ₹1,40,000 before tax" in over["headline"]
@@ -299,9 +299,9 @@ def test_october_then_over_balance_moves_the_po_only_once(api):
 
 def test_reset_restores_the_seed_state(api):
     seed_orders = api.client.get("/api/purchase-orders").json()
-    submit(api, "01_acme_clean.pdf")
-    submit(api, "04_zenith_october.pdf")
-    review = submit(api, "09_sharma_no_po.pdf")
+    submit(api, "acme_2026-11-05.pdf")
+    submit(api, "zenith_2026-10-31.pdf")
+    review = submit(api, "sharma_2026-11-08.pdf")
     api.client.post(f"/api/runs/{review['id']}/resolve",
                     json={"action": "approve", "comment": "ok"})
     assert api.client.get("/api/purchase-orders").json() != seed_orders
@@ -325,12 +325,12 @@ def test_reset_restores_the_seed_state(api):
 
 
 def test_after_a_reset_the_same_invoice_is_approved_again(api):
-    assert submit(api, "01_acme_clean.pdf")["decision"] == "APPROVE"
-    assert submit(api, "01_acme_clean.pdf")["decision"] == "REJECT"
+    assert submit(api, "acme_2026-11-05.pdf")["decision"] == "APPROVE"
+    assert submit(api, "acme_2026-11-05.pdf")["decision"] == "REJECT"
 
     api.client.post("/api/demo/reset")
 
-    assert submit(api, "01_acme_clean.pdf")["decision"] == "APPROVE"
+    assert submit(api, "acme_2026-11-05.pdf")["decision"] == "APPROVE"
     assert purchase_order(api, "PO-2231")["billed_to_date"] == "180000.00"
 
 
@@ -338,7 +338,7 @@ def test_a_reset_during_a_run_abandons_it_without_touching_the_books(api):
     # The reset arrives while the AI call of a run is in flight.
     api.reader.during_call = lambda: api.client.post("/api/demo/reset")
 
-    response = api.client.post("/api/runs", data={"sample": "01_acme_clean.pdf"})
+    response = api.client.post("/api/runs", data={"sample": "acme_2026-11-05.pdf"})
 
     assert api.client.get(f"/api/runs/{response.json()['id']}").status_code == 404
     assert api.client.get("/api/runs").json()["runs"] == []
@@ -354,7 +354,7 @@ def test_a_reset_during_a_run_abandons_it_without_touching_the_books(api):
 def test_a_run_fails_cleanly_when_extraction_raises_an_error(api):
     api.reader.error = ExtractionError("The AI service could not be reached.")
 
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
 
     assert run["status"] == "failed"
     assert run["state"] == "failed"
@@ -375,7 +375,7 @@ def test_a_run_fails_cleanly_when_extraction_raises_an_error(api):
 def test_an_unexpected_error_fails_the_run_without_leaking_details(api):
     api.reader.error = RuntimeError("secret internal detail /srv/app/key")
 
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
 
     assert (run["status"], run["failed_stage"], run["decision"]) == ("failed", "extract", None)
     assert run["error_message"] == (
@@ -386,21 +386,21 @@ def test_an_unexpected_error_fails_the_run_without_leaking_details(api):
 
 def test_a_failed_run_does_not_block_a_later_successful_one(api):
     api.reader.error = ExtractionError("The AI service could not be reached.")
-    assert submit(api, "01_acme_clean.pdf")["status"] == "failed"
+    assert submit(api, "acme_2026-11-05.pdf")["status"] == "failed"
 
     api.reader.error = None
-    run = submit(api, "01_acme_clean.pdf")
+    run = submit(api, "acme_2026-11-05.pdf")
 
     assert run["decision"] == "APPROVE"  # the failed attempt is not an "earlier invoice"
     assert purchase_order(api, "PO-2231")["billed_to_date"] == "180000.00"
 
 
 def test_the_saved_reading_is_used_and_labelled_when_the_live_call_fails(api):
-    submit(api, "07_corelight_price_hike.pdf")  # read once; the reading is saved
+    submit(api, "corelight_2026-11-10.pdf")  # read once; the reading is saved
     api.client.post("/api/demo/reset")  # saved readings survive a reset
     api.reader.error = ExtractionError("The AI service could not be reached.")
 
-    run = submit(api, "07_corelight_price_hike.pdf")
+    run = submit(api, "corelight_2026-11-10.pdf")
 
     assert run["decision"] == "REVIEW"
     result = stage(run, "extract")["result"]

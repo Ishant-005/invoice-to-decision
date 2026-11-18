@@ -67,7 +67,7 @@ for definition in data["invoices"]:
         notes.append(f"18% of {rupees(subtotal)} = {rupees(right_tax)} "
                      f"{check(right_tax == tax, f'{name}: tax')}")
         adds_up = subtotal + tax == Decimal(printed_total)
-        if name == "12_brightline_bad_sum.pdf":
+        if name == "brightline_2026-11-14.pdf":
             # The one deliberate error in the set: the printed total must be wrong by 1,000.
             verdict = check(Decimal(printed_total) - (subtotal + tax) == 1000, f"{name}: bad sum")
             notes.append(f"{rupees(subtotal)} + {rupees(tax)} = {rupees(subtotal + tax)}, printed "
@@ -136,7 +136,7 @@ for definition in data["invoices"]:
     print(f"{name:34} {kind:8} {len(pdf):>5} {len(text.strip()):>10} {text_objects:>9} {images:>6}  {result}")
 
 exact = "Total ₹1,18,000 inclusive of GST @ 18%"
-text = pypdfium2.PdfDocument(REPO / "data/invoices/02_brightline_tax_inclusive.pdf")[0]
+text = pypdfium2.PdfDocument(REPO / "data/invoices/brightline_2026-11-02.pdf")[0]
 found = exact in " ".join(text.get_textpage().get_text_range().split())
 print(f"\nCase 2 prints the exact phrase '{exact}': {check(found, 'case 2 phrase')}")
 

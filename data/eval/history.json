@@ -85,19 +85,19 @@
     },
     "mismatches": [
       {
-        "file": "03_sharma_scan.pdf",
+        "file": "sharma_2026-10-28.pdf",
         "field": "vendor_name",
         "expected": "Sharma Office Supplies",
         "got": "SHARMA OFFICE SUPPLIES"
       },
       {
-        "file": "09_sharma_no_po.pdf",
+        "file": "sharma_2026-11-08.pdf",
         "field": "vendor_name",
         "expected": "Sharma Office Supplies",
         "got": "SHARMA OFFICE SUPPLIES"
       },
       {
-        "file": "13_unknown_vendor.pdf",
+        "file": "quickfix_2026-11-09.pdf",
         "field": "vendor_name",
         "expected": "Quickfix Hardware Co.",
         "got": "QUICKFIX HARDWARE CO."
