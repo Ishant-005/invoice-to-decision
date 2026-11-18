@@ -53,10 +53,13 @@ export function AppShell() {
                 end={item.to === '/'}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center border-b-2 px-3 font-medium transition-colors',
+                    // Active: darker text and a short bar under the label. Keyboard focus
+                    // (Tab) gets its own clear ring; a mouse click shows no outline.
+                    'relative flex items-center rounded-sm px-3 font-medium outline-none transition-colors',
+                    'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     isActive
-                      ? 'border-primary text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground',
+                      ? 'text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary'
+                      : 'text-muted-foreground hover:text-foreground',
                   )
                 }
               >

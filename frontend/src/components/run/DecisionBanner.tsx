@@ -59,7 +59,6 @@ export function DecisionBanner({ run, onResolved }: { run: RunDetail; onResolved
                       <p className="leading-relaxed">{reason.text}</p>
                       <p className="mt-0.5 text-[11px] text-muted-foreground">
                         <span className={cn('font-semibold', TONES[tone].text)}>{TONES[tone].label}</span>
-                        <span className="code ml-2">{reason.code}</span>
                       </p>
                     </div>
                   </li>

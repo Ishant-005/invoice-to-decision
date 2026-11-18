@@ -518,7 +518,7 @@ function MatchBody({ result, findings, run }: { result: MatchResult; findings: F
               <tr className="text-xs text-muted-foreground [&>th]:pb-1 [&>th]:font-medium">
                 <th className="w-[46%]">Invoice line</th>
                 <th>Purchase order line</th>
-                <th className="w-28 text-right">Similarity</th>
+                <th className="w-28 text-right">Wording match</th>
               </tr>
             </thead>
             <tbody className="divide-y border-y">
@@ -526,7 +526,11 @@ function MatchBody({ result, findings, run }: { result: MatchResult; findings: F
                 <tr key={pair.invoice_line} className="[&>td]:py-1.5 [&>td]:pr-3">
                   <td>{pair.description}</td>
                   <td>{pair.po_description ?? <span className="font-medium text-review">Not on the purchase order</span>}</td>
-                  <td className="num text-right whitespace-nowrap text-muted-foreground">{pair.score.toFixed(0)} / 100</td>
+                  {/* The score says how alike the two descriptions are, so it is shown only when
+                      a purchase order line was matched. */}
+                  <td className="num text-right whitespace-nowrap text-muted-foreground">
+                    {pair.po_line_no !== null ? `${pair.score.toFixed(0)} / 100` : '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>

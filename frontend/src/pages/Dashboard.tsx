@@ -21,7 +21,26 @@ import { day, inr, moment } from '@/lib/format'
 import { useApi } from '@/lib/useApi'
 import { cn } from '@/lib/utils'
 
-type Filter = 'ALL' | Decision
+// One filter at a time on the runs table. The buttons above the table filter by the
+// process's decision; the tiles add three views by where a run stands now.
+type Filter = 'ALL' | Decision | 'PROCESSED' | 'AWAITING' | 'APPROVED_VALUE'
+
+const FILTER_TEST: Record<Filter, (run: RunSummary) => boolean> = {
+  ALL: () => true,
+  APPROVE: (run) => run.decision === 'APPROVE',
+  REVIEW: (run) => run.decision === 'REVIEW',
+  REJECT: (run) => run.decision === 'REJECT',
+  PROCESSED: (run) => run.decision !== null, // reached a decision
+  AWAITING: (run) => run.state === 'awaiting_review',
+  APPROVED_VALUE: (run) => run.state === 'approved' || run.state === 'approved_by_reviewer',
+}
+
+// What the table says it is showing when a tile's view is on.
+const TILE_VIEW_LABEL: Partial<Record<Filter, string>> = {
+  PROCESSED: 'Runs that reached a decision',
+  AWAITING: 'Awaiting review',
+  APPROVED_VALUE: 'Approved, by the process or a reviewer',
+}
 
 export function Dashboard() {
   // While any run is still being processed, both calls repeat so the screen stays current.
@@ -39,7 +58,7 @@ export function Dashboard() {
       {stats.error ? (
         <ErrorBox message={stats.error} onRetry={stats.reload} />
       ) : (
-        <StatTiles stats={stats.data} />
+        <StatTiles stats={stats.data} filter={filter} onFilter={setFilter} />
       )}
 
       <div className="mt-6">
@@ -62,12 +81,26 @@ export function Dashboard() {
 
 // --- Tiles -----------------------------------------------------------------------------
 
-function StatTiles({ stats }: { stats: Stats | null }) {
+function StatTiles({
+  stats,
+  filter,
+  onFilter,
+}: {
+  stats: Stats | null
+  filter: Filter
+  onFilter: (filter: Filter) => void
+}) {
+  // Each tile filters the runs table to the runs it counts; clicking it again shows all.
+  const tile = (key: Filter) => ({
+    active: filter === key,
+    onClick: () => onFilter(filter === key ? 'ALL' : key),
+  })
   const s = stats
   const reviewed = s ? s.approved_by_reviewer + s.rejected_by_reviewer : 0
   return (
     <div className="grid grid-cols-5 gap-3">
       <Tile
+        {...tile('PROCESSED')}
         label="Invoices processed"
         value={s ? String(s.processed) : null}
         note={
@@ -83,18 +116,21 @@ function StatTiles({ stats }: { stats: Stats | null }) {
         }
       />
       <Tile
+        {...tile('APPROVE')}
         label="Auto-approved"
         value={s ? (s.auto_approved_percent === null ? '—' : `${s.auto_approved_percent}%`) : null}
         note={s ? (s.processed ? `${s.auto_approved} of ${s.processed} needed no person` : 'Nothing processed yet') : ''}
         tone="approve"
       />
       <Tile
+        {...tile('AWAITING')}
         label="Awaiting review"
         value={s ? String(s.awaiting_review) : null}
         note={s ? (reviewed ? `${reviewed} already resolved by a reviewer` : 'Waiting for a person to decide') : ''}
         tone="review"
       />
       <Tile
+        {...tile('REJECT')}
         label="Rejected"
         value={s ? String(s.rejected) : null}
         note={
@@ -107,6 +143,7 @@ function StatTiles({ stats }: { stats: Stats | null }) {
         tone="reject"
       />
       <Tile
+        {...tile('APPROVED_VALUE')}
         label="Value approved"
         value={s ? inr(s.value_approved_pretax) : null}
         note={s ? `before tax · ${inr(s.value_approved_gross)} including tax` : ''}
@@ -120,28 +157,45 @@ function Tile({
   value,
   note,
   tone,
+  active,
+  onClick,
 }: {
   label: string
   value: string | null
   note: string
   tone?: 'approve' | 'review' | 'reject'
+  active: boolean
+  onClick: () => void
 }) {
   const bar = { approve: 'bg-approve', review: 'bg-review', reject: 'bg-reject' }
   return (
-    <Panel className="relative overflow-hidden px-4 py-3.5">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={active ? 'Showing these runs below. Click to show all runs.' : 'Show these runs in the table below'}
+      className={cn(
+        'relative overflow-hidden rounded-lg border bg-card px-4 py-3.5 text-left outline-none transition-colors',
+        'hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring',
+        active && 'border-primary bg-accent/50',
+      )}
+    >
       <span className={cn('absolute inset-y-0 left-0 w-[3px]', tone ? bar[tone] : 'bg-border')} />
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="num mt-1.5 text-2xl font-semibold tracking-tight">
+      <span className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+        {label}
+        {active && <span className="font-semibold text-primary">Shown below</span>}
+      </span>
+      <span className="num mt-1.5 block text-2xl font-semibold tracking-tight">
         {value ?? <span className="text-muted-foreground">…</span>}
-      </p>
-      <p className="mt-1 min-h-4 text-xs text-muted-foreground">{note}</p>
-    </Panel>
+      </span>
+      <span className="mt-1 block min-h-4 text-xs text-muted-foreground">{note}</span>
+    </button>
   )
 }
 
 // --- Runs table ------------------------------------------------------------------------
 
-const FILTERS: { key: Filter; label: string }[] = [
+const DECISION_FILTERS: { key: Filter; label: string }[] = [
   { key: 'ALL', label: 'All' },
   { key: 'APPROVE', label: 'Approve' },
   { key: 'REVIEW', label: 'Review' },
@@ -158,15 +212,26 @@ function RunsTable({
   onFilter: (filter: Filter) => void
 }) {
   const navigate = useNavigate()
-  const shown = filter === 'ALL' ? runs : runs.filter((run) => run.decision === filter)
-  const count = (key: Filter) => (key === 'ALL' ? runs.length : runs.filter((r) => r.decision === key).length)
+  const shown = runs.filter(FILTER_TEST[filter])
+  const count = (key: Filter) => runs.filter(FILTER_TEST[key]).length
+  const tileView = TILE_VIEW_LABEL[filter]
 
   return (
     <Panel>
       <div className="flex items-center justify-between border-b px-4 py-2.5">
-        <h2 className="font-semibold">Runs</h2>
+        <h2 className="flex items-center gap-3 font-semibold">
+          Runs
+          {tileView && (
+            <span className="flex items-center gap-2 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+              {tileView} <span className="num opacity-70">{count(filter)}</span>
+              <button type="button" onClick={() => onFilter('ALL')} className="underline underline-offset-2 hover:no-underline">
+                Show all
+              </button>
+            </span>
+          )}
+        </h2>
         <div className="flex items-center gap-1" role="group" aria-label="Filter by decision">
-          {FILTERS.map(({ key, label }) => (
+          {DECISION_FILTERS.map(({ key, label }) => (
             <button
               key={key}
               type="button"
@@ -200,17 +265,24 @@ function RunsTable({
           decision and the reason for it.
         </EmptyState>
       ) : shown.length === 0 ? (
-        <EmptyState title={`No runs with the decision ${filter.toLowerCase()}`}>
-          Choose another filter to see the other runs.
+        <EmptyState
+          title="No runs match this filter"
+          action={
+            <Button variant="outline" onClick={() => onFilter('ALL')}>
+              Show all runs
+            </Button>
+          }
+        >
+          {tileView ?? `No run has the decision ${filter.toLowerCase()}.`}
         </EmptyState>
       ) : (
         <table className="w-full table-fixed text-left">
           <thead>
             <tr className="border-b text-xs text-muted-foreground [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
               <th className="w-[100px] pl-4!">Time</th>
-              <th className="w-[236px]">Vendor</th>
+              <th className="w-[220px]">Vendor</th>
               <th className="w-[124px]">Invoice no.</th>
-              <th className="w-[98px] text-right">Amount</th>
+              <th className="w-[136px] text-right">Amount incl. tax</th>
               <th className="w-[76px]">PO</th>
               <th className="w-[94px]">Decision</th>
               <th>Headline reason</th>
@@ -236,15 +308,19 @@ function RunsTable({
                   {run.invoice_number ?? <Missing state={run.state} />}
                 </td>
                 <td className="num text-right">
+                  {/* Always the total including tax. If it could not be read, say so, and
+                      give the amount before tax as a labelled second line. */}
                   {run.gross_amount ? (
                     inr(run.gross_amount)
-                  ) : run.pretax_amount ? (
-                    <span title="The total could not be read; this is the amount before tax">
-                      {inr(run.pretax_amount)}
-                      <span className="block font-sans text-[10px] text-muted-foreground">before tax</span>
-                    </span>
                   ) : (
-                    <Missing state={run.state} />
+                    <>
+                      <Missing state={run.state} />
+                      {run.pretax_amount && (
+                        <span className="block text-[11px] whitespace-nowrap text-muted-foreground">
+                          {inr(run.pretax_amount)} before tax
+                        </span>
+                      )}
+                    </>
                   )}
                 </td>
                 <td className="num whitespace-nowrap">{run.po_id ?? <span className="text-muted-foreground">—</span>}</td>
@@ -305,9 +381,9 @@ function SeededHistory({ list }: { list: RunList }) {
           {list.seeded_history.map((invoice) => (
             <tr key={invoice.file_name} className="border-b last:border-b-0 [&>td]:px-3 [&>td]:py-2">
               <td className="num w-[100px] pl-4! text-xs whitespace-nowrap text-muted-foreground">{day(invoice.invoice_date)}</td>
-              <td className="w-[236px] truncate font-medium">{invoice.vendor_name}</td>
+              <td className="w-[220px] truncate font-medium">{invoice.vendor_name}</td>
               <td className="num w-[124px]">{invoice.invoice_number}</td>
-              <td className="num w-[98px] text-right">{inr(invoice.gross_amount)}</td>
+              <td className="num w-[136px] text-right">{inr(invoice.gross_amount)}</td>
               <td className="num w-[76px] whitespace-nowrap">
                 <Link className="underline-offset-2 hover:underline" to={`/purchase-orders?po=${invoice.po_id}`}>
                   {invoice.po_id}
