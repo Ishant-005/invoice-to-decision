@@ -122,7 +122,7 @@ function StageMarker({ stage, number }: { stage: Stage; number: number }) {
     )
   if (stage.status === 'failed')
     return (
-      <span className={cn(base, 'border-reject bg-reject text-white')} aria-label="Failed">
+      <span className={cn(base, 'border-reject bg-reject text-background')} aria-label="Failed">
         <X className="size-3.5" strokeWidth={3} />
       </span>
     )

@@ -1,6 +1,6 @@
 // The frame around every screen: the header with navigation, "New run" and the reset button.
 
-import { Plus, RotateCcw } from 'lucide-react'
+import { Moon, Plus, RotateCcw, Sun } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router'
 
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { resetDemo } from '@/lib/api'
+import { useTheme } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -70,6 +71,7 @@ export function AppShell() {
 
           <div className="ml-auto flex items-center gap-2">
             <ResetButton onReset={() => setResetCount((count) => count + 1)} />
+            <ThemeToggle />
             <Button asChild>
               <Link to="/new">
                 <Plus /> New run
@@ -83,6 +85,23 @@ export function AppShell() {
         <Outlet />
       </main>
     </div>
+  )
+}
+
+function ThemeToggle() {
+  const [theme, toggle] = useTheme()
+  const next = theme === 'dark' ? 'light' : 'dark'
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggle}
+      aria-label={`Switch to ${next} theme`}
+      title={`Switch to ${next} theme`}
+      className="text-muted-foreground"
+    >
+      {theme === 'dark' ? <Sun /> : <Moon />}
+    </Button>
   )
 }
 

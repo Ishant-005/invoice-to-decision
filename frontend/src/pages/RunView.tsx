@@ -240,7 +240,7 @@ function PagePreview({ run }: { run: RunDetail }) {
       </div>
       {run.pages.length > 0 ? (
         <div className="max-h-[calc(100vh-130px)] overflow-y-auto bg-muted p-3">
-          <img src={run.pages[page]} alt={`Page ${page + 1} of ${run.file_name}`} className="w-full rounded-sm border bg-white" />
+          <img src={run.pages[page]} alt={`Page ${page + 1} of ${run.file_name}`} className="w-full rounded-sm border bg-paper" />
         </div>
       ) : (
         <div className="flex aspect-[1/1.2] items-center justify-center bg-muted px-6 text-center text-muted-foreground">

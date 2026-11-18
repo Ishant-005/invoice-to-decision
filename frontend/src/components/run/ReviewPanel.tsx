@@ -91,7 +91,7 @@ export function ReviewPanel({ run, onResolved }: { run: RunDetail; onResolved: (
           variant="outline"
           disabled={!hasComment || busy !== null || !canApprove}
           onClick={() => resolve('approve')}
-          className="border-approve/50 bg-card font-semibold text-approve hover:bg-approve-soft hover:text-approve"
+          className="border-approve/50 bg-card font-semibold text-approve hover:bg-approve-soft hover:text-approve disabled:opacity-60 dark:border-approve/50 dark:bg-card dark:hover:bg-approve-soft"
         >
           <Check /> {busy === 'approve' ? 'Saving…' : mustChoosePO && poId ? `Approve on ${poId}` : 'Approve'}
         </Button>
@@ -99,7 +99,7 @@ export function ReviewPanel({ run, onResolved }: { run: RunDetail; onResolved: (
           variant="outline"
           disabled={!hasComment || busy !== null}
           onClick={() => resolve('reject')}
-          className="border-reject/50 bg-card font-semibold text-reject hover:bg-reject-soft hover:text-reject"
+          className="border-reject/50 bg-card font-semibold text-reject hover:bg-reject-soft hover:text-reject disabled:opacity-60 dark:border-reject/50 dark:bg-card dark:hover:bg-reject-soft"
         >
           <X /> {busy === 'reject' ? 'Saving…' : 'Reject'}
         </Button>

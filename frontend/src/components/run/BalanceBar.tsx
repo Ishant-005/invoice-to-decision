@@ -47,7 +47,7 @@ export function BalanceBar({
           )}
           {over && (
             <div
-              className="bg-review [background-image:repeating-linear-gradient(135deg,transparent_0_4px,rgb(255_255_255/0.35)_4px_8px)]"
+              className="bg-review [background-image:repeating-linear-gradient(135deg,transparent_0_4px,var(--hatch)_4px_8px)]"
               style={{ width: pct(overBy) }}
               title={`Over the PO value by ${inr(overBy)}`}
             />

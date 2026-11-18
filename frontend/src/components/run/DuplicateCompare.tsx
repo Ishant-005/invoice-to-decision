@@ -48,7 +48,7 @@ function PageThumb({ label, caption, src }: { label: string; caption: string; sr
       <Eyebrow className="mb-1.5">{label}</Eyebrow>
       {src ? (
         <a href={src} target="_blank" rel="noreferrer" title="Open the page at full size">
-          <img src={src} alt={`${label}: first page of ${caption}`} className="w-full rounded border bg-white" />
+          <img src={src} alt={`${label}: first page of ${caption}`} className="w-full rounded border bg-paper" />
         </a>
       ) : (
         <div className="flex aspect-[1/1.414] items-center justify-center rounded border bg-muted text-xs text-muted-foreground">

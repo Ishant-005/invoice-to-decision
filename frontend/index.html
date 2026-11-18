@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoice-to-Decision</title>
+    <!-- Applies a remembered dark theme before anything is drawn, so the light theme never
+         flashes first. Light is the default; the operating system setting is not consulted.
+         The key "theme" is the one src/lib/theme.ts writes. -->
+    <script>
+      try {
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark')
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
