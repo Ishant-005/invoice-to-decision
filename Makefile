@@ -1,7 +1,7 @@
 # Common commands for the project. Run `make help` to list them.
 # `make eval` from the spec does not exist yet; it is added in the milestone that builds it.
 
-.PHONY: help install dev backend frontend test lint build seed invoices check-invoices
+.PHONY: help install dev backend frontend test lint build seed invoices check-invoices decisions
 
 help:
 	@echo "make install   Install backend and frontend dependencies"
@@ -12,6 +12,7 @@ help:
 	@echo "make seed      Reset the database to the seed data (vendors, POs, seeded history)"
 	@echo "make invoices  Regenerate the test invoice PDFs and the answer key"
 	@echo "make check-invoices  Recompute every invoice figure and check each PDF's text layer"
+	@echo "make decisions  Show the decision for each sample invoice (CASES=\"1 5\" for full detail)"
 
 install:
 	cd backend && uv sync
@@ -54,3 +55,8 @@ invoices:
 
 check-invoices:
 	cd backend && uv run python ../scripts/check_invoices.py
+
+# Runs the answer key's ground-truth extractions through the decision logic (no AI model).
+# `make decisions` prints one line per case; `make decisions CASES="1 5 8"` prints those in full.
+decisions:
+	cd backend && uv run python ../scripts/show_decisions.py $(CASES)
