@@ -14,5 +14,7 @@ export default defineConfig({
     port: 5173,
     // In development the frontend (5173) forwards /api calls to the backend (8000).
     proxy: { '/api': 'http://localhost:8000' },
+    // The "How it works" screen shows docs/ASSUMPTIONS.md, which sits one folder up.
+    fs: { allow: ['..'] },
   },
 })
