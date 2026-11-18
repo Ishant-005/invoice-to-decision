@@ -37,17 +37,41 @@ only that it builds and is served.
 | Every figure recomputed; spec section 4 arithmetic is consistent | tested + verified | `make check-invoices` prints "ALL CHECKS PASSED"; `test_invoice_files.py` |
 | Scans (cases 3, 8, 10) have no text layer | tested + verified | `make check-invoices`: 0 text characters, 0 text objects, 1 image each; no `/Font` in the files |
 | Case 10: invoice number blank, total unreadable | verified | Looked at the image; the generator asserts the blot covers every pixel of the total |
-| `data/invoices/expected.json` answer key (13 cases + 3 sequences) | tested | `test_invoice_files.py`. The expected decisions are not yet proven by decision logic; that is Milestone 2 |
+| `data/invoices/expected.json` answer key (13 cases + 3 sequences) | tested | `test_invoice_files.py`. The expected decisions are proven by the decision logic in Milestone 2 |
 
 Not checked: the PDFs have only been rendered with pdfium (the same engine Chrome uses), not
 opened in Preview or Acrobat by the implementer. The digital PDFs' fonts come from macOS, so
 `make invoices` on another operating system would produce different-looking files.
+
+## Milestone 2: Decision logic
+
+No AI model, no API and no web code is involved in anything below. "Verified" here means the
+implementer ran `make decisions` and read the printed decisions; nothing has been seen in the
+web app yet, because the stages are not wired into it until Milestone 4.
+
+| Feature | Status | Evidence |
+|---|---|---|
+| Findings structure (code, stage, status, severity, message, owner, data) | tested | `app/pipeline/findings.py`; used by every test below |
+| Thresholds read from `config/rules.yaml` | tested | Boundary tests in `tests/unit/test_rules.py` and `test_validate.py` run against the file's values |
+| Validate: 7 checks + tax normalisation | tested | `tests/unit/test_validate.py` (rounding at ₹1, tax-inclusive derivation, dates, currency) |
+| Match: vendor (tax ID, cleaned name, suggested, not found, blocked, tax ID conflict) | tested | `tests/unit/test_match.py` |
+| Match: PO (explicit verified / conflict / not found; implied single / multiple / none) | tested | `tests/unit/test_match.py` |
+| Match: line pairing, `LINE_NOT_ON_PO` | tested | `tests/unit/test_match.py` |
+| Rules: exact and probable duplicates, monthly non-duplicate, rejected invoices ignored | tested | `tests/unit/test_rules.py` |
+| Rules: PO balance with tolerance (exactly 2%, exactly ₹5,000), PO status, price variance | tested | `tests/unit/test_rules.py` |
+| Decide: worst severity wins, reasons ordered, owner, next action, what passed | tested | `tests/unit/test_decide.py` |
+| Answer key: all 13 cases reach the expected decision, owner, vendor, PO, match type, pre-tax amount and finding codes | tested + verified | `tests/test_answer_key.py` (13 passed); `make decisions` output read |
+| Answer key: the 3 sequences | tested | `tests/test_answer_key.py` (3 passed) |
+| Decision wording for the 13 cases | verified | `make decisions CASES="..."` read by the implementer. Wording for situations outside the 13 cases (blocked vendor, closed PO, several candidate POs and so on) is covered by tests for its codes but has not been read through |
+
+Not done in this milestone, by design: nothing writes a decision to the database or updates a
+PO balance yet (Milestone 4). The answer-key test applies outcomes in memory to test sequences.
 
 ## Known issues
 
 - pytest prints one deprecation warning from Starlette's test client (it suggests the `httpx2`
   package instead of `httpx`). Harmless; tests pass.
 
-## Milestones 2 to 7
+## Milestones 3 to 7
 
 Not started.

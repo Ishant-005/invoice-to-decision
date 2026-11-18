@@ -35,3 +35,29 @@ repeated here.
 - The answer key has no `evidence` snippets: the exact wording a reader quotes cannot be fixed in advance, so it is not scored.
 - Database tables for runs and stage events exist now (reset has to wipe them) but are minimal; Milestone 4 may add columns. The database is disposable: delete `var/app.db` and it is re-seeded on startup.
 - `POST /api/demo/reset` was added now rather than in Milestone 4, since "reset works" is part of this milestone.
+
+## Milestone 2
+
+- The deterministic stages take a `Books` snapshot (vendors, POs, PO lines, earlier invoices) rather than a database session, so they are pure functions; `load_books` is the one place that reads the database.
+- "Today" is passed into Validate as a parameter instead of read from the clock, so the same inputs always give the same decision and the tests do not depend on the day they run.
+- A finding's `status` and `severity` are independent: a small PO overage is `warn` + `info` (still approves); a suggested PO or suggested vendor is `warn` + `review`; skipped and passed checks are always `info`.
+- Each check emits exactly one finding. A check with several parts (TOTALS: lines to subtotal, and subtotal + tax to total) passes when every part that could run passed, and says which part could not be checked.
+- Finding codes the spec does not name: `PRETAX_AMOUNT` (tax normalisation succeeded), `VENDOR_MATCH`, `VENDOR_BLOCKED`, `PO_MATCH`, `PO_VENDOR_CONFLICT` (explicit_conflict), `PO_IMPLIED` (implied_single and implied_multiple), `PO_NOT_IDENTIFIED` (no strong candidate).
+- Pre-tax amount: a printed subtotal is used even when the total is missing (case 10: pre-tax 2,20,000, gross unknown). The spec's wording is "if subtotal and total are printed"; the missing total is already reported by REQUIRED_FIELDS. The code never fills in a missing total by adding subtotal and tax.
+- Pre-tax amount, third route: no subtotal but total and tax amount printed gives `total - tax`. Only when no route works is `TAX_UNRESOLVED` raised.
+- A derived pre-tax amount is rounded to the paisa, half up.
+- No printed currency is a note (INR assumed), not a failure; a currency other than INR is a review.
+- Owners where the spec gives none: DOC_TYPE, AMOUNT_SANITY, TAX_UNRESOLVED and an ambiguous date go to AP; a blocked vendor and a closed PO go to procurement.
+- Fuzzy vendor matching uses rapidfuzz `ratio` on the cleaned names. A suggested vendor is still used to look up POs and duplicates so the reviewer sees the full picture; the decision is REVIEW regardless.
+- PO reference normalisation keeps letters and digits, then drops a leading "PURCHASE ORDER", "PO" and "NO", so "P.O. #2231" and "2231" both become "2231".
+- A quoted PO that exists but whose invoice vendor is unknown is reported as `explicit_conflict`.
+- Implied-PO description points are scaled: 40 x (best line similarity / 100). An implied_single PO is still run through the balance, status and price checks so the reviewer sees them; explicit_conflict and implied_multiple are not (there is no single PO to check against).
+- Line matching runs when the invoice has at least one line with a description; a line is compared on unit price only if it prints one. Several invoice lines may pair with the same PO line.
+- Invoice numbers are compared after upper-casing and removing everything except letters and digits ("INV-1017-A" becomes "INV1017A").
+- The same-file (hash) duplicate check also ignores rejected invoices, like the other duplicate checks, so a rejected file can be resubmitted once the cause is fixed.
+- When the invoice number or the total is unreadable, the duplicate comparisons that need it are skipped and say so; nothing is guessed.
+- A unit price more than 2% below the PO price is flagged as well as one above ("within plus or minus 2%").
+- The primary owner is the owner of the first, most serious problem: reject before review, then pipeline order (Validate, Match, Rules; duplicates before balance). The headline names that problem and counts the others.
+- The Decide output also carries a "not checked" list (skipped checks and why), besides the reasons and "what passed".
+- Recording an outcome (adding to billed-to-date, adding the invoice to history) belongs to Milestone 4. The answer-key test does it in memory in `tests/answer_key.py` so the three sequences can be tested now.
+- `make decisions` was added so the decision wording can be read without the web app.
