@@ -169,7 +169,8 @@ def _match_vendor(record: InvoiceRecord, books: Books,
                 findings.append(failed(
                     "VENDOR_TAX_ID_CONFLICT", STAGE,
                     f"The name matches {vendor.name}, but the invoice prints GSTIN "
-                    f"{printed_tax_id} and the vendor master has {vendor.tax_id}.",
+                    f"{printed_tax_id} and the vendor master has "
+                    f"{vendor.tax_id or 'no GSTIN on file'}.",
                     severity="review", owner="ap", printed=printed_tax_id, master=vendor.tax_id))
 
     # 3. A similar name: suggested only, a person must confirm.

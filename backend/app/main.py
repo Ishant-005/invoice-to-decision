@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlmodel import Session
 
-from app.api import demo, health, purchase_orders, reference, runs
+from app.api import demo, health, purchase_orders, reference, runs, vendors
 from app.db import create_tables, engine
 from app.pipeline.runner import fail_interrupted_runs
 from app.seed import seed_if_empty
@@ -35,4 +35,5 @@ app.include_router(health.router, prefix="/api")
 app.include_router(runs.router, prefix="/api")
 app.include_router(reference.router, prefix="/api")
 app.include_router(purchase_orders.router, prefix="/api")
+app.include_router(vendors.router, prefix="/api")
 app.include_router(demo.router, prefix="/api")
