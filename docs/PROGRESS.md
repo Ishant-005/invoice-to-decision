@@ -206,6 +206,7 @@ Limits to be honest about:
 | Dockerfile | verified on Render (not built locally) | Docker is not installed on this machine. Rehearsed without Docker: the same layout, `uv sync --locked` without dev packages (72 MB, no Playwright or pytest), started with `PORT` and `DATA_DIR`, Acme clean sample APPROVE and Zenith over-balance REVIEW from saved readings (no API key in the rehearsal), about 146 MB of memory in use |
 | `render.yaml` (free plan, Singapore, health check, secret key) | verified | Written from Render's current docs; deployed from it |
 | Live deployment | verified | https://invoice-to-decision-ramf.onrender.com on 23 Nov 2026: `/api/health` ok; the web app loads; Acme clean sample APPROVE on PO-2231 (5.4 s of stage time, 4.4 s of it the live AI call); Zenith over-balance sample REVIEW, PO-2260 over by ₹40,000 (5.2 s, 4.6 s the AI call). Both read live by the model. This was the first real build of the Dockerfile. Not checked on the live site: the other 11 samples, uploads, reviewer actions, behaviour after a sleep or restart |
+| Scenario labels on the sample gallery cards | tested | Labels in `data/invoices/sample_tags.json`, sent by `GET /api/samples`, shown on each card; backend test checks all 13 labels and that a run never carries one; frontend test checks the card and the line above the gallery. Not looked at in a browser |
 
 ## Milestone 6
 

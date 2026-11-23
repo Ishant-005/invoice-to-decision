@@ -1,0 +1,18 @@
+{
+  "_about": "A short scenario label for each sample invoice, shown on its card in the New run gallery. Display only: the pipeline never reads this file.",
+  "tags": {
+    "acme_2026-11-05.pdf": "Happy path",
+    "brightline_2026-11-02.pdf": "Tax included",
+    "sharma_2026-10-28.pdf": "Scanned",
+    "zenith_2026-10-31.pdf": "Part-billed PO",
+    "zenith_2026-11-14.pdf": "Over PO value",
+    "corelight_2026-11-06.pdf": "Within tolerance",
+    "corelight_2026-11-10.pdf": "Price increase",
+    "acme_2026-10-03.pdf": "Near duplicate",
+    "sharma_2026-11-08.pdf": "No PO number",
+    "corelight_2026-11-11.pdf": "Missing fields",
+    "acme_2026-11-12.pdf": "Name variant",
+    "brightline_2026-11-14.pdf": "Totals mismatch",
+    "quickfix_2026-11-09.pdf": "Unknown vendor"
+  }
+}

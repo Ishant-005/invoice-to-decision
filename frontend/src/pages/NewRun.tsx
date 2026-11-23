@@ -57,8 +57,7 @@ export function NewRun() {
       <div className="mt-8 mb-3 flex items-baseline justify-between">
         <h2 className="font-semibold">Or run a sample invoice</h2>
         <p className="text-xs text-muted-foreground">
-          13 invoices from five vendors. The descriptions say what each document is, not what
-          the process will decide.
+          Labels describe what each sample tests. The process only receives the PDF.
         </p>
       </div>
 
@@ -166,6 +165,11 @@ function SampleCard({
           )}
         </div>
         <div className="p-3">
+          {sample.tag && (
+            <p className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase" data-testid="sample-tag">
+              {sample.tag}
+            </p>
+          )}
           <p className="font-medium">
             <span className="num mr-1.5 text-muted-foreground">{String(sample.case).padStart(2, '0')}</span>
             {vendor}

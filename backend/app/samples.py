@@ -14,12 +14,17 @@ class Sample(BaseModel):
     file: str
     description: str  # what the document contains, not what should happen to it
     scanned: bool
+    tag: str  # a short label for the gallery card ("Happy path"); display only
 
 
 def load_samples() -> list[Sample]:
     answer_key = json.loads((config.INVOICE_DIR / "expected.json").read_text(encoding="utf-8"))
+    # The labels are kept in their own file, apart from the PDFs and their names. Only the
+    # gallery shows them; a run is started with the file name alone.
+    tags = json.loads((config.INVOICE_DIR / "sample_tags.json").read_text(encoding="utf-8"))["tags"]
     return [Sample(case=entry["case"], file=entry["file"], description=entry["description"],
-                   scanned=entry["scanned"]) for entry in answer_key["invoices"]]
+                   scanned=entry["scanned"], tag=tags.get(entry["file"], ""))
+            for entry in answer_key["invoices"]]
 
 
 def sample_path(file_name: str) -> Path | None:

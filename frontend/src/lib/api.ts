@@ -249,6 +249,7 @@ export interface Sample {
   file: string
   description: string
   scanned: boolean
+  tag: string // a short label for the gallery card; display only, never sent with a run
 }
 
 export interface POInvoice {

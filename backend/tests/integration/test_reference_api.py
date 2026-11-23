@@ -1,5 +1,7 @@
 """The list, dashboard and reference endpoints."""
 
+import json
+
 from tests.integration.conftest import submit
 
 
@@ -9,9 +11,25 @@ def test_samples_lists_the_13_invoices_without_their_expected_outcome(api):
     assert [s["case"] for s in samples] == list(range(1, 14))
     assert samples[0] == {
         "case": 1, "file": "acme_2026-11-05.pdf", "scanned": False,
-        "description": "Acme Packaging: corrugated boxes and bubble wrap"}
-    assert all(set(s) == {"case", "file", "description", "scanned"} for s in samples)
+        "description": "Acme Packaging: corrugated boxes and bubble wrap", "tag": "Happy path"}
+    assert all(set(s) == {"case", "file", "description", "scanned", "tag"} for s in samples)
     assert [s["case"] for s in samples if s["scanned"]] == [3, 8, 10]
+
+
+def test_every_sample_has_a_scenario_tag_that_never_reaches_the_run(api):
+    samples = api.client.get("/api/samples").json()
+    assert [s["tag"] for s in samples] == [
+        "Happy path", "Tax included", "Scanned", "Part-billed PO", "Over PO value",
+        "Within tolerance", "Price increase", "Near duplicate", "No PO number",
+        "Missing fields", "Name variant", "Totals mismatch", "Unknown vendor"]
+
+    # The tag is for the gallery card only: the file keeps its name, and nothing stored
+    # about the run mentions the tag.
+    over = next(s for s in samples if s["tag"] == "Over PO value")
+    assert over["file"] == "zenith_2026-11-14.pdf"
+    run = submit(api, over["file"])
+    assert run["file_name"] == "zenith_2026-11-14.pdf"
+    assert "Over PO value" not in json.dumps(run)
 
 
 def test_purchase_orders_show_value_billed_remaining_lines_and_invoices(api):
