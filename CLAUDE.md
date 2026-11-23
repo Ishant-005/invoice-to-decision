@@ -67,6 +67,7 @@ Useful one-offs:
 - The frontend tests only: `cd frontend && npm test` (one file: `npx vitest run src/pages/Dashboard.test.tsx`)
 - Colours: every colour is a token in `frontend/src/index.css` (`:root` for light, `.dark` for dark); never write a colour in a component
 - Add a purchase order: the form on `/purchase-orders` (`frontend/src/components/AddPurchaseOrder.tsx`, checks in `frontend/src/lib/newPo.ts`), saved by `POST /api/purchase-orders` (`backend/app/api/purchase_orders.py`)
+- Add a vendor: the form on `/purchase-orders` and "+ New vendor" in the add-PO form (`frontend/src/components/AddVendor.tsx`); every check is in `backend/app/api/vendors.py` (`POST /api/vendors/check`, `POST /api/vendors`)
 - Health check: `curl http://localhost:8000/api/health`
 - Run a sample over HTTP (**live API call**): `curl -F sample=acme_2026-11-05.pdf http://localhost:8000/api/runs`, then `curl http://localhost:8000/api/runs/<id>`
 - After a change to `backend/app/models.py`, delete `var/app.db`; it is re-created and seeded on startup (there are no migrations)
