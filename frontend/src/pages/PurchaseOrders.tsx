@@ -6,6 +6,7 @@ import { Fragment, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
 import { AddPurchaseOrder } from '@/components/AddPurchaseOrder'
+import { AddVendor, type Vendor } from '@/components/AddVendor'
 import { EmptyState, ErrorBox, Eyebrow, Loading, PageHeader, Panel, Tag } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import type { PurchaseOrder } from '@/lib/api'
@@ -19,6 +20,8 @@ export function PurchaseOrders() {
   // A link such as /purchase-orders?po=PO-2260 arrives with that PO already open.
   const [open, setOpen] = useState<string[]>(params.get('po') ? [params.get('po') as string] : [])
   const [adding, setAdding] = useState(false)
+  const [addingVendor, setAddingVendor] = useState(false)
+  const [addedVendor, setAddedVendor] = useState<Vendor | null>(null)
   const toggle = (id: string) => setOpen(open.includes(id) ? open.filter((other) => other !== id) : [...open, id])
 
   return (
@@ -27,13 +30,35 @@ export function PurchaseOrders() {
         title="Purchase orders"
         description="What the company agreed to buy. All amounts are before tax. Billed goes up only when an invoice is approved, by the process or by a reviewer."
         actions={
-          !adding && orders.data ? (
-            <Button onClick={() => setAdding(true)}>
-              <Plus /> Add purchase order
-            </Button>
+          !adding && !addingVendor && orders.data ? (
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setAddingVendor(true)}>
+                <Plus /> Add vendor
+              </Button>
+              <Button onClick={() => setAdding(true)}>
+                <Plus /> Add purchase order
+              </Button>
+            </div>
           ) : null
         }
       />
+      {addingVendor && (
+        <AddVendor
+          onCancel={() => setAddingVendor(false)}
+          onAdded={(vendor) => {
+            setAddedVendor(vendor)
+            setAddingVendor(false)
+          }}
+        />
+      )}
+      {addedVendor && !addingVendor && !adding && (
+        <p className="mb-4 rounded-md border border-approve-line bg-approve-soft px-3 py-2 text-[13px]" role="status">
+          <span className="font-medium text-approve">
+            {addedVendor.name} was added as {addedVendor.id}.
+          </span>{' '}
+          It has no purchase order yet: use "Add purchase order" to give it one.
+        </p>
+      )}
       {adding && orders.data && (
         <AddPurchaseOrder
           orders={orders.data}

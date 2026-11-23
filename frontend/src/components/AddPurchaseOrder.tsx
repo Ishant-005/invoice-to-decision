@@ -5,6 +5,7 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, type ReactNode, useState } from 'react'
 
+import { AddVendor, type Vendor } from '@/components/AddVendor'
 import { Panel } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import type { PurchaseOrder } from '@/lib/api'
@@ -23,12 +24,6 @@ import {
 } from '@/lib/newPo'
 import { useApi } from '@/lib/useApi'
 import { cn } from '@/lib/utils'
-
-interface Vendor {
-  id: string
-  name: string
-  status: string
-}
 
 const INPUT =
   'h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 aria-invalid:border-reject'
@@ -56,6 +51,7 @@ export function AddPurchaseOrder({
   const [serverErrors, setServerErrors] = useState<Errors>({})
   const [failure, setFailure] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [addingVendor, setAddingVendor] = useState(false)
 
   const errors = { ...serverErrors, ...checkNewPo(po, orders, (vendors.data ?? []).map((v) => v.id), today) }
   const errorFor = (field: string) => (triedToSave || touched.includes(field) ? errors[field] : undefined)
@@ -90,6 +86,19 @@ export function AddPurchaseOrder({
   }
 
   return (
+    <>
+      {/* The vendor form sits above this one, not inside it: a form cannot contain a form. */}
+      {addingVendor && (
+        <AddVendor
+          onCancel={() => setAddingVendor(false)}
+          onAdded={(vendor) => {
+            // The new vendor joins the list and is chosen straight away.
+            vendors.setData([...(vendors.data ?? []), vendor])
+            change({ vendor_id: vendor.id })
+            setAddingVendor(false)
+          }}
+        />
+      )}
     <Panel className="mb-4">
       <form onSubmit={save} noValidate data-testid="add-po-form">
         <div className="border-b px-4 py-2.5">
@@ -100,7 +109,22 @@ export function AddPurchaseOrder({
         </div>
 
         <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-4 pt-4">
-          <Field label="Vendor" id="po-vendor" error={errorFor('vendor_id')}>
+          <Field
+            label="Vendor"
+            id="po-vendor"
+            error={errorFor('vendor_id')}
+            action={
+              !addingVendor && (
+                <button
+                  type="button"
+                  className="rounded-sm text-xs font-medium text-primary underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setAddingVendor(true)}
+                >
+                  + New vendor
+                </button>
+              )
+            }
+          >
             <select
               id="po-vendor"
               className={INPUT}
@@ -249,15 +273,31 @@ export function AddPurchaseOrder({
         </div>
       </form>
     </Panel>
+    </>
   )
 }
 
-function Field({ label, id, error, children }: { label: string; id: string; error?: string; children: ReactNode }) {
+function Field({
+  label,
+  id,
+  error,
+  action,
+  children,
+}: {
+  label: string
+  id: string
+  error?: string
+  action?: ReactNode // a small link shown beside the label
+  children: ReactNode
+}) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-xs font-medium text-muted-foreground">
-        {label}
-      </label>
+      <div className="mb-1 flex items-baseline justify-between">
+        <label htmlFor={id} className="block text-xs font-medium text-muted-foreground">
+          {label}
+        </label>
+        {action}
+      </div>
       {children}
       <Message text={error} />
     </div>
