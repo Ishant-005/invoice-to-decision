@@ -1,11 +1,13 @@
 // Screen 4: the purchase orders, each with its value, billed amount, remaining balance and
 // the invoices recorded against it.
 
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Plus } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
+import { AddPurchaseOrder } from '@/components/AddPurchaseOrder'
 import { EmptyState, ErrorBox, Eyebrow, Loading, PageHeader, Panel, Tag } from '@/components/common'
+import { Button } from '@/components/ui/button'
 import type { PurchaseOrder } from '@/lib/api'
 import { day, inr, quantity, share } from '@/lib/format'
 import { useApi } from '@/lib/useApi'
@@ -16,6 +18,7 @@ export function PurchaseOrders() {
   const [params] = useSearchParams()
   // A link such as /purchase-orders?po=PO-2260 arrives with that PO already open.
   const [open, setOpen] = useState<string[]>(params.get('po') ? [params.get('po') as string] : [])
+  const [adding, setAdding] = useState(false)
   const toggle = (id: string) => setOpen(open.includes(id) ? open.filter((other) => other !== id) : [...open, id])
 
   return (
@@ -23,7 +26,26 @@ export function PurchaseOrders() {
       <PageHeader
         title="Purchase orders"
         description="What the company agreed to buy. All amounts are before tax. Billed goes up only when an invoice is approved, by the process or by a reviewer."
+        actions={
+          !adding && orders.data ? (
+            <Button onClick={() => setAdding(true)}>
+              <Plus /> Add purchase order
+            </Button>
+          ) : null
+        }
       />
+      {adding && orders.data && (
+        <AddPurchaseOrder
+          orders={orders.data}
+          onCancel={() => setAdding(false)}
+          onAdded={(po) => {
+            // Show the new PO in the table straight away, opened, in PO-number order.
+            orders.setData([...(orders.data ?? []), po].sort((a, b) => (a.id < b.id ? -1 : 1)))
+            setOpen([po.id])
+            setAdding(false)
+          }}
+        />
+      )}
       {orders.loading ? (
         <Panel>
           <Loading label="Loading purchase orders…" />
