@@ -164,3 +164,12 @@ repeated here.
 - Every colour comes from the tokens at the top of `frontend/src/index.css` (one set for light, one for dark); components name a token, never a colour. Three tokens exist for special cases: `paper` (the white sheet behind an invoice image, the same in both themes), `hatch` (the stripes on the over-value part of the balance bar) and `overlay` (the dimmed page behind a dialog).
 - Text contrast was calculated from the token values, not judged by eye: every text and background pair used for body text and for the approve, review and reject colours is at least 5.9 to 1 in light and 6.4 to 1 in dark (the usual minimum for normal text is 4.5 to 1). Text deliberately dimmed with opacity (disabled buttons, secondary counts) is lower.
 - The frontend now has tests of its own (Vitest with a simulated browser page): `npm test`, run by `make test` and CI. They render the real dashboard with the two API calls answered from test data.
+
+## Milestone 7 (deployment)
+
+- Hosted on Render's free plan as one Docker web service (`Dockerfile`, `render.yaml`): FastAPI serves the API and the built web app. The free plan has no lasting disk, sleeps after 15 idle minutes and may restart at any time, so the hosted demo's run history, balances and added vendors and POs go back to the seed data on every restart. The "How it works" screen says so.
+- All runtime state (database, uploaded PDFs, page images; saved readings are rows in the database) is under one folder, `DATA_DIR`, which defaults to `var/` locally.
+- On every start the app creates and seeds the database if it is missing or empty and never touches one that has data. It also loads saved readings of the 13 samples from `data/seed/sample_extractions.json` (real model readings made on 18 and 23 Nov 2026), so a freshly started server can still show a sample when the live call fails. A newer reading in the database is not overwritten.
+- A missing API key now counts as a failed live call (falls back to a saved reading, labelled as such) instead of stopping the run with an unexpected error.
+- The daily limit on live AI calls is counted in the database, so on the free plan the count starts again after a restart. The limit still bounds any one stretch of uptime.
+- The runtime image holds production Python packages only: no test tools, no Playwright or Chromium, no invoice generator. The sample PDFs are copied in as files.

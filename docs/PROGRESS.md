@@ -195,6 +195,18 @@ Limits to be honest about:
 
 - None open. (The Starlette test-client deprecation warning noted earlier no longer appears: 294 backend tests pass with no warnings.)
 
-## Milestones 6 and 7
+## Milestone 7 (deployment), in progress
+
+| Item | Status | Evidence |
+|---|---|---|
+| `DATA_DIR` holds all runtime state, default `var/` | tested | `tests/integration/test_startup.py` |
+| Startup seeds a missing or empty database and never wipes an existing one | tested + verified | Same file (3 tests). Rehearsed: started on an empty folder, ran two samples, restarted, both runs still listed |
+| Saved readings of the 13 samples loaded on startup | tested | With the live call failing, every sample still reaches its expected decision from the saved reading (13 tests) |
+| FastAPI serves the built web app | tested + verified | Test with a stand-in build folder; rehearsal served `/`, `/runs/x` and the assets |
+| Dockerfile | implemented, not built | Docker is not installed on this machine. Rehearsed without Docker: the same layout, `uv sync --locked` without dev packages (72 MB, no Playwright or pytest), started with `PORT` and `DATA_DIR`, Acme clean sample APPROVE and Zenith over-balance REVIEW from saved readings (no API key in the rehearsal), about 146 MB of memory in use |
+| `render.yaml` (free plan, Singapore, health check, secret key) | implemented | Written from Render's current docs; not yet deployed |
+| Live deployment | not done | Waiting for the live URL |
+
+## Milestone 6
 
 Not started.

@@ -68,6 +68,8 @@ Useful one-offs:
 - Colours: every colour is a token in `frontend/src/index.css` (`:root` for light, `.dark` for dark); never write a colour in a component
 - Add a purchase order: the form on `/purchase-orders` (`frontend/src/components/AddPurchaseOrder.tsx`, checks in `frontend/src/lib/newPo.ts`), saved by `POST /api/purchase-orders` (`backend/app/api/purchase_orders.py`)
 - Add a vendor: the form on `/purchase-orders` and "+ New vendor" in the add-PO form (`frontend/src/components/AddVendor.tsx`); every check is in `backend/app/api/vendors.py` (`POST /api/vendors/check`, `POST /api/vendors`)
+- Deployment: `Dockerfile` (frontend build, then a Python image that serves everything) and `render.yaml` (Render free plan). All runtime files live under `DATA_DIR` (default `var/`). Startup logic is `prepare_database` in `backend/app/seed.py`
+- Run it the way the host does (after `make build`): `cd backend && DATA_DIR=/tmp/itd PORT=10000 uv run uvicorn app.main:app --host 0.0.0.0 --port 10000`, then open http://localhost:10000
 - Health check: `curl http://localhost:8000/api/health`
 - Run a sample over HTTP (**live API call**): `curl -F sample=acme_2026-11-05.pdf http://localhost:8000/api/runs`, then `curl http://localhost:8000/api/runs/<id>`
 - After a change to `backend/app/models.py`, delete `var/app.db`; it is re-created and seeded on startup (there are no migrations)

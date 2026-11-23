@@ -31,6 +31,10 @@ export function HowItWorks() {
           decision, and every sentence of the explanation is assembled from real check results.
         </p>
       </div>
+      <p className="mt-2 text-[13px] text-muted-foreground">
+        The hosted demo runs on free hosting with no lasting disk, so its run history, and the balances that go with
+        it, reset to the seed data whenever the server restarts.
+      </p>
 
       <h2 className="mt-8 mb-3 text-base font-semibold">The process map</h2>
       <ProcessMap rules={rules.data} />
