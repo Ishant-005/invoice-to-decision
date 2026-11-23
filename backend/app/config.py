@@ -18,7 +18,11 @@ load_dotenv(REPO_ROOT / ".env")
 
 SEED_DIR = REPO_ROOT / "data" / "seed"  # the "spreadsheet": vendors, POs, PO lines, history
 INVOICE_DIR = REPO_ROOT / "data" / "invoices"  # the 13 sample invoices and the answer key
-VAR_DIR = REPO_ROOT / "var"  # runtime files (database, uploads); git-ignored
+# Everything the running app writes (database, uploaded PDFs, page images) lives under one
+# folder. DATA_DIR moves it, for example on a hosting service; the default is var/ in the
+# repo, which is git-ignored.
+VAR_DIR = Path(os.environ.get("DATA_DIR") or REPO_ROOT / "var").resolve()
+FRONTEND_DIST = REPO_ROOT / "frontend" / "dist"  # the built web app, if it has been built
 PAGES_DIR = VAR_DIR / "pages"  # page images, one folder per file hash
 UPLOADS_DIR = VAR_DIR / "uploads"  # the PDF of every run, named <run id>.pdf; never served
 

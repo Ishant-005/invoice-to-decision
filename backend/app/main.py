@@ -6,10 +6,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlmodel import Session
 
+from app import config
 from app.api import demo, health, purchase_orders, reference, runs, vendors
-from app.db import create_tables, engine
+from app.db import engine
+from app.frontend import serve_frontend
 from app.pipeline.runner import fail_interrupted_runs
-from app.seed import seed_if_empty
+from app.seed import prepare_database
 
 # One line per event, with the time first. Every line about a run carries "run=<id>", so
 # `grep run=<id>` on the server log tells the story of that run.
@@ -20,10 +22,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 async def lifespan(app: FastAPI):
     # On startup: make sure the tables exist and, if the database is empty, load the seed
     # data. Then close off any run that an earlier server process left unfinished.
-    create_tables()
+    if prepare_database(engine):
+        logging.getLogger("invoice.api").info("empty database: seed data loaded")
     with Session(engine) as session:
-        if seed_if_empty(session):
-            logging.getLogger("invoice.api").info("empty database: seed data loaded")
         fail_interrupted_runs(session)
     yield
 
@@ -37,3 +38,7 @@ app.include_router(reference.router, prefix="/api")
 app.include_router(purchase_orders.router, prefix="/api")
 app.include_router(vendors.router, prefix="/api")
 app.include_router(demo.router, prefix="/api")
+
+# In production there is one service: FastAPI also serves the built web app. In development
+# the frontend runs on its own server (make dev) and this does nothing unless it was built.
+serve_frontend(app, config.FRONTEND_DIST)

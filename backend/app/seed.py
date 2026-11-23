@@ -7,13 +7,15 @@ were approved before the demo starts). Seeding never calls the AI model.
 import csv
 import hashlib
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from sqlalchemy import Engine
 from sqlmodel import Session, delete, select
 
 from app import config
+from app.db import create_tables
 from app.models import Invoice, POLine, PurchaseOrder, Run, SavedExtraction, StageEvent, Vendor
 
 
@@ -70,6 +72,40 @@ def seed_if_empty(session: Session) -> bool:
         return False
     seed_database(session)
     return True
+
+
+def load_sample_extractions(session: Session, seed_dir: Path = config.SEED_DIR,
+                            invoice_dir: Path = config.INVOICE_DIR) -> int:
+    """Store the saved readings of the 13 sample invoices, for any sample that has none yet.
+    Returns how many were added.
+
+    These are real readings by the AI model, made earlier and kept in
+    data/seed/sample_extractions.json. A fresh server has never read anything, so without
+    them a sample could not be shown when the live AI call fails. A reading already in the
+    database (for example a newer live one) is never overwritten."""
+    saved = json.loads((seed_dir / "sample_extractions.json").read_text(encoding="utf-8"))
+    added = 0
+    for entry in saved["extractions"]:
+        file_hash = sha256_of(invoice_dir / entry["file"])
+        if session.get(SavedExtraction, file_hash) is None:
+            session.add(SavedExtraction(
+                file_hash=file_hash, file_name=entry["file"], record=entry["record"],
+                source="live", created_at=datetime.fromisoformat(entry["read_at"]).replace(tzinfo=UTC)))
+            added += 1
+    session.commit()
+    return added
+
+
+def prepare_database(engine: Engine) -> bool:
+    """Called on every startup. Whatever it finds, the app can run afterwards:
+    - no database file, or an empty one: the tables are created and the seed data loaded;
+    - a database with data in it: left exactly as it is.
+    Either way the samples' saved readings are topped up. Returns True if it seeded."""
+    create_tables(engine)
+    with Session(engine) as session:
+        seeded = seed_if_empty(session)
+        load_sample_extractions(session)
+    return seeded
 
 
 def reset_demo(session: Session) -> None:

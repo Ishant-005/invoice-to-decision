@@ -21,6 +21,7 @@ API details follow the Anthropic documentation as read on 2026-11-18 ("PDF suppo
 """
 
 import base64
+import os
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Annotated, Literal
@@ -189,6 +190,10 @@ def read_with_model(pdf_bytes: bytes, client: anthropic.Anthropic | None = None)
     failure, after the SDK's retries are used up."""
     model = config.extraction_model()
     pdf_base64 = base64.standard_b64encode(pdf_bytes).decode("ascii")
+    if client is None and not os.environ.get("ANTHROPIC_API_KEY", "").strip():
+        # Said plainly here: without a key the SDK fails with an error of its own kind,
+        # which would stop the run instead of falling back to a saved reading.
+        raise ExtractionError("No API key is configured on the server.")
     try:
         client = client or make_client()
         response = client.messages.parse(

@@ -256,3 +256,12 @@ def test_the_prompt_keeps_the_fixed_requirements():
     for phrase in ("Report only what is printed", "return null", "Never infer, compute",
                    "do not work out a total", "probably meant", "1,06,200.00"):
         assert phrase in SYSTEM_PROMPT
+
+
+def test_a_missing_api_key_is_a_readable_error_so_a_saved_reading_can_be_used(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "  ")
+    with pytest.raises(ExtractionError, match="No API key is configured"):
+        read_with_model(b"%PDF-1.4")
+    monkeypatch.delenv("ANTHROPIC_API_KEY")
+    with pytest.raises(ExtractionError, match="No API key is configured"):
+        read_with_model(b"%PDF-1.4")

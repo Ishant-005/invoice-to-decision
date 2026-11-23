@@ -30,7 +30,7 @@ class DecimalText(TypeDecorator):
 
 def make_engine(url: str = config.DATABASE_URL) -> Engine:
     if url.startswith("sqlite:///"):
-        config.VAR_DIR.mkdir(exist_ok=True)
+        config.VAR_DIR.mkdir(parents=True, exist_ok=True)
     # check_same_thread=False: FastAPI serves requests on several threads.
     return create_engine(url, connect_args={"check_same_thread": False})
 
