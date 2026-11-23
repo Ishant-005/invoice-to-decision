@@ -1,6 +1,7 @@
-// The dashboard has one filter system. These tests check that a tile's count, the count on
-// the filter it switches to, and the number of rows then shown all agree, before and after
-// a reviewer approves one REVIEW run and rejects another.
+// The dashboard has one filter system: the filter buttons on the runs table. The tiles only
+// display numbers. These tests check that a tile's count, the count on the matching filter
+// and the number of rows that filter shows all agree, before and after a reviewer approves
+// one REVIEW run and rejects another, and that clicking a tile changes nothing.
 //
 // The page is rendered for real; only the two API calls are answered from the data below.
 // (That the server's own totals agree with its runs list is tested in the backend:
@@ -75,22 +76,21 @@ const chipCount = (page: HTMLElement, key: string) => Number(chip(page, key).que
 const activeChip = (page: HTMLElement) => page.querySelector('[data-filter][aria-pressed="true"]')?.getAttribute('data-filter')
 const rowsShown = (page: HTMLElement) => page.querySelectorAll('tbody tr').length
 
-/** Click each tile and check: the right filter becomes active, and the tile's count, the
- *  filter's count and the rows shown are the same number. */
+/** Choose each filter and check that its count, the rows shown and the matching tile's
+ *  count are the same number. */
 function expectTilesChipsAndRowsToAgree(page: HTMLElement, runs: RunSummary[]) {
   const stats = statsFor(runs)
-  const cases: [tileLabel: string, filter: string, expected: number][] = [
-    ['Invoices processed', 'ALL', stats.total_runs],
-    ['Auto-approved', 'APPROVED', stats.approved],
-    ['Awaiting review', 'AWAITING', stats.awaiting_review],
-    ['Rejected', 'REJECTED', stats.rejected],
-    ['Value approved', 'APPROVED', stats.approved],
+  const cases: [filter: string, expected: number][] = [
+    ['ALL', stats.total_runs],
+    ['APPROVED', stats.approved],
+    ['AWAITING', stats.awaiting_review],
+    ['REJECTED', stats.rejected],
   ]
-  for (const [label, filter, expected] of cases) {
-    fireEvent.click(tile(page, label))
-    expect(activeChip(page), `${label} activates ${filter}`).toBe(filter)
-    expect(chipCount(page, filter), `${label}: count on the filter`).toBe(expected)
-    expect(rowsShown(page), `${label}: rows shown`).toBe(expected)
+  for (const [filter, expected] of cases) {
+    fireEvent.click(chip(page, filter))
+    expect(activeChip(page)).toBe(filter)
+    expect(chipCount(page, filter), `${filter}: count on the filter`).toBe(expected)
+    expect(rowsShown(page), `${filter}: rows shown`).toBe(expected)
   }
   // The tiles that show a plain count show that same number.
   expect(tileValue(page, 'Invoices processed')).toBe(String(chipCount(page, 'ALL')))
@@ -125,6 +125,19 @@ test('they still agree after a reviewer approves one run and rejects another', a
   expect(chipCount(page, 'AWAITING')).toBe(1)
   expect(chipCount(page, 'REJECTED')).toBe(2)
   expect(tile(page, 'Rejected').textContent).toContain('1 by the process · 1 by a reviewer')
+})
+
+test('the tiles are display only: clicking one does not change the filter', async () => {
+  const page = await showDashboard(BEFORE)
+  fireEvent.click(chip(page, 'AWAITING'))
+  for (const label of ['Invoices processed', 'Auto-approved', 'Awaiting review', 'Rejected', 'Value approved']) {
+    expect(tile(page, label).tagName).toBe('DIV')
+    expect(tile(page, label).querySelector('button, a')).toBeNull()
+    fireEvent.click(tile(page, label))
+    expect(activeChip(page)).toBe('AWAITING')
+    expect(rowsShown(page)).toBe(3)
+  }
+  expect(page.textContent).not.toContain('Shown below')
 })
 
 test('the State column says who settled each run; the Decision column keeps the verdict', async () => {

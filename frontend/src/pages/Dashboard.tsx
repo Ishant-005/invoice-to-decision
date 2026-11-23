@@ -38,7 +38,7 @@ export function Dashboard() {
       {stats.error ? (
         <ErrorBox message={stats.error} onRetry={stats.reload} />
       ) : (
-        <StatTiles stats={stats.data} onFilter={setFilter} />
+        <StatTiles stats={stats.data} />
       )}
 
       <div className="mt-6">
@@ -61,16 +61,15 @@ export function Dashboard() {
 
 // --- Tiles -----------------------------------------------------------------------------
 
-/** Each tile switches the runs table to the filter that lists the runs it counts, so a
- *  tile's number and the number on that filter are always the same. */
-function StatTiles({ stats, onFilter }: { stats: Stats | null; onFilter: (filter: Filter) => void }) {
+/** The tiles only display numbers; the filter buttons on the runs table are the one way to
+ *  change the view. Each tile's count is the same number as the count on the matching
+ *  filter (Dashboard.test.tsx checks this). */
+function StatTiles({ stats }: { stats: Stats | null }) {
   const s = stats
   return (
     <div className="grid grid-cols-5 gap-3">
       <Tile
         label="Invoices processed"
-        shows="All"
-        onClick={() => onFilter('ALL')}
         value={s ? String(s.total_runs) : null}
         note={
           s
@@ -87,8 +86,6 @@ function StatTiles({ stats, onFilter }: { stats: Stats | null; onFilter: (filter
       />
       <Tile
         label="Auto-approved"
-        shows="Approved"
-        onClick={() => onFilter('APPROVED')}
         value={s ? (s.auto_approved_percent === null ? '—' : `${s.auto_approved_percent}%`) : null}
         note={
           s
@@ -101,24 +98,18 @@ function StatTiles({ stats, onFilter }: { stats: Stats | null; onFilter: (filter
       />
       <Tile
         label="Awaiting review"
-        shows="Awaiting review"
-        onClick={() => onFilter('AWAITING')}
         value={s ? String(s.awaiting_review) : null}
         note={s ? (s.awaiting_review ? 'Waiting for a person to decide' : 'Nothing is waiting') : ''}
         tone="review"
       />
       <Tile
         label="Rejected"
-        shows="Rejected"
-        onClick={() => onFilter('REJECTED')}
         value={s ? String(s.rejected) : null}
         note={s ? `${s.rejected_by_process} by the process · ${s.rejected_by_reviewer} by a reviewer` : ''}
         tone="reject"
       />
       <Tile
         label="Value approved"
-        shows="Approved"
-        onClick={() => onFilter('APPROVED')}
         value={s ? inr(s.value_approved_pretax) : null}
         note={
           s
@@ -132,35 +123,25 @@ function StatTiles({ stats, onFilter }: { stats: Stats | null; onFilter: (filter
 
 function Tile({
   label,
-  shows,
   value,
   note,
   tone,
-  onClick,
 }: {
   label: string
-  shows: string // the name of the filter this tile switches to
   value: string | null
   note: string
   tone?: 'approve' | 'review' | 'reject'
-  onClick: () => void
 }) {
   const bar = { approve: 'bg-approve', review: 'bg-review', reject: 'bg-reject' }
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={`Show "${shows}" in the runs table`}
-      data-tile={label}
-      className="relative overflow-hidden rounded-lg border bg-card px-4 py-3.5 text-left outline-none transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring"
-    >
+    <div data-tile={label} className="relative overflow-hidden rounded-lg border bg-card px-4 py-3.5">
       <span className={cn('absolute inset-y-0 left-0 w-[3px]', tone ? bar[tone] : 'bg-border')} />
       <span className="block text-xs font-medium text-muted-foreground">{label}</span>
       <span data-value className="num mt-1.5 block text-2xl font-semibold tracking-tight">
         {value ?? <span className="text-muted-foreground">…</span>}
       </span>
       <span className="mt-1 block min-h-4 text-xs text-muted-foreground">{note}</span>
-    </button>
+    </div>
   )
 }
 
