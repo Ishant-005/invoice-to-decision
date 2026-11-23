@@ -1,0 +1,25 @@
+# Render Blueprint: one free web service built from the Dockerfile.
+# The free plan has no lasting disk and sleeps after 15 idle minutes, so everything under
+# DATA_DIR (database, uploads, page images) starts again from the seed data on each restart.
+services:
+  - type: web
+    name: invoice-to-decision
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      # Entered by hand in the Render dashboard; never stored in the repo.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: EXTRACTION_MODEL
+        value: claude-sonnet-5-5
+      - key: EXTRACTION_CACHE_MODE
+        value: fallback
+      - key: MAX_LIVE_EXTRACTIONS_PER_DAY
+        value: "150"
+      - key: DATA_DIR
+        value: /data
